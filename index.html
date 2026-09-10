@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>ROTA ZERO — Corrida de Moto</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+    <div id="stage"><canvas id="three-canvas"></canvas></div>
+    <div id="minimap-wrap"><canvas id="minimap" width="190" height="190"></canvas></div>
+    <div class="hud" id="timerbox">TEMPO<b id="timerval">00.0s</b></div>
+    <div class="hud" id="speedbox"><span id="speedval">0</span><span id="speedunit">km/h</span></div>
+    <div class="overlay" id="introOverlay">
+        <div class="card">
+            <h1>🏍 ROTA ZERO</h1>
+            <p>Saia do ponto amarelo e chegue até a bandeira preta. No meio do trajeto a estrada se divide em duas —
+                escolha seu caminho, ninguém vai te dizer qual é o melhor.</p>
+            <div class="keys">
+                <div class="key">W</div>
+                <div class="key">A</div>
+                <div class="key">S</div>
+                <div class="key">D</div>
+            </div>
+            <p style="margin-top:-8px;">ou use as setas do teclado</p><button class="btn" id="startBtn">LIGAR
+                MOTO</button>
+        </div>
+    </div>
+    <div class="overlay hidden" id="finishOverlay">
+        <div class="card">
+            <h1>🏁 CHEGADA!</h1>
+            <div id="finishTime">00.0s</div>
+            <p>Você completou a rota. Quer tentar o outro caminho e ver se é mais rápido?</p><button class="btn"
+                id="restartBtn">CORRER DE NOVO</button>
+        </div>
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script type="module" src="js/main.js"></script>
+</body>
+
+</html>
