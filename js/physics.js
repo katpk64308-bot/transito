@@ -1,7 +1,22 @@
 import { finishPoint, physics } from './config.js';
 import { isDown, state } from './state.js';
 
-export function updatePhysics(dt, bike, track, onFinish) {
+function collidesWithModel(x, z, colliders) {
+  const bikeRadius = 2.5;
+  return colliders.some(collider => {
+    const cos = Math.cos(collider.angle);
+    const sin = Math.sin(collider.angle);
+    const relativeX = x - collider.x;
+    const relativeZ = z - collider.z;
+    const localX = relativeX * cos - relativeZ * sin;
+    const localZ = relativeX * sin + relativeZ * cos;
+
+    return Math.abs(localX) <= collider.halfX + bikeRadius &&
+      Math.abs(localZ) <= collider.halfZ + bikeRadius;
+  });
+}
+
+export function updatePhysics(dt, bike, track, onFinish, colliders = []) {
   const throttle = isDown('w', 'arrowup');
   const brake = isDown('s', 'arrowdown');
   const left = isDown('a', 'arrowleft');
@@ -18,8 +33,7 @@ export function updatePhysics(dt, bike, track, onFinish) {
 
   state.speed = Math.max(physics.MAX_REVERSE, Math.min(topSpeed, state.speed));
   let steer = 0;
-  // Controles invertidos conforme solicitado:
-  // A/esquerda viram para a direita; D/direita viram para a esquerda.
+
   if (left) steer += 1;
   if (right) steer -= 1;
 
@@ -28,8 +42,16 @@ export function updatePhysics(dt, bike, track, onFinish) {
     state.heading += steer * physics.TURN_RATE * dt * Math.min(1, Math.abs(speedFactor) + .25) * Math.sign(state.speed || 1);
   }
 
+  const previousX = state.x;
+  const previousZ = state.z;
   state.x += Math.sin(state.heading) * state.speed * dt;
   state.z += Math.cos(state.heading) * state.speed * dt;
+
+  if (collidesWithModel(state.x, state.z, colliders)) {
+    state.x = previousX;
+    state.z = previousZ;
+    state.speed = 0;
+  }
   bike.group.position.set(state.x, 0, state.z);
   bike.group.rotation.y = state.heading;
 

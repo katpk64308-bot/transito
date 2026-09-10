@@ -12,6 +12,7 @@
     <div id="stage"><canvas id="three-canvas"></canvas></div>
     <div id="minimap-wrap"><canvas id="minimap" width="190" height="190"></canvas></div>
     <div class="hud" id="timerbox">TEMPO<b id="timerval">00.0s</b></div>
+    <div class="hud" id="coordinates">X: 0.0&nbsp;&nbsp; Z: 0.0&nbsp;&nbsp; (F3 ocultar)</div>
     <div class="hud" id="speedbox"><span id="speedval">0</span><span id="speedunit">km/h</span></div>
     <div class="overlay" id="introOverlay">
         <div class="card">
@@ -37,6 +38,11 @@
         </div>
     </div>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/libs/inflate.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/libs/fflate.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/FBXLoader.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/MTLLoader.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/OBJLoader.js"></script>
     <script type="module" src="js/main.js"></script>
 </body>
 
