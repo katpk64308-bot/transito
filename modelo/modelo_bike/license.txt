@@ -1,0 +1,11 @@
+Model Information:
+* title:	Electric scooter
+* source:	https://sketchfab.com/3d-models/electric-scooter-8b36ff16d9de44b5b738bf27e0ba4245
+* author:	Pravin_9271 (https://sketchfab.com/Pravin-9271)
+
+Model License:
+* license type:	CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
+* requirements:	Author must be credited. Commercial use is allowed.
+
+If you use this 3D model in your project be sure to copy paste this credit wherever you share it:
+This work is based on "Electric scooter" (https://sketchfab.com/3d-models/electric-scooter-8b36ff16d9de44b5b738bf27e0ba4245) by Pravin_9271 (https://sketchfab.com/Pravin-9271) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
