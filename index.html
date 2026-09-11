@@ -14,6 +14,25 @@
     <div class="hud" id="timerbox">TEMPO<b id="timerval">00.0s</b></div>
     <div class="hud" id="coordinates">X: 0.0&nbsp;&nbsp; Z: 0.0&nbsp;&nbsp; (F3 ocultar)</div>
     <div class="hud" id="speedbox"><span id="speedval">0</span><span id="speedunit">km/h</span></div>
+    <div class="overlay main-menu" id="mainMenu">
+        <div class="menu-card">
+            <div class="menu-kicker">CORRIDA DE MOTO</div>
+            <h1>ROTA ZERO</h1>
+            <p class="menu-subtitle">Escolha uma opção</p>
+            <div class="menu-buttons">
+                <button class="menu-btn primary" id="playBtn">JOGAR</button>
+                <button class="menu-btn" data-panel="settingsPanel">CONFIGURAÇÃO</button>
+                <button class="menu-btn" data-panel="extrasPanel">EXTRA</button>
+                <button class="menu-btn" data-panel="achievementsPanel">CONQUISTAS</button>
+            </div>
+        </div>
+    </div>
+    <div class="overlay hidden loading-overlay" id="loadingOverlay">
+        <div class="loading-content">
+            <div class="loading-title">Loading<span class="loading-dots"><i>.</i><i>.</i><i>.</i></span></div>
+            <p>Preparando o mapa...</p>
+        </div>
+    </div>
     <div class="overlay" id="introOverlay">
         <div class="card">
             <h1>🏍 ROTA ZERO</h1>
@@ -27,6 +46,29 @@
             </div>
             <p style="margin-top:-8px;">ou use as setas do teclado</p><button class="btn" id="startBtn">LIGAR
                 MOTO</button>
+        </div>
+    </div>
+    <div class="overlay hidden" id="settingsPanel">
+        <div class="card menu-panel">
+            <h1>CONFIGURAÇÃO</h1>
+            <p>Use WASD ou as setas do teclado para pilotar.</p>
+            <p class="panel-note">As opções de desempenho estão ajustadas para deixar o jogo mais leve.</p>
+            <button class="btn backBtn">VOLTAR</button>
+        </div>
+    </div>
+    <div class="overlay hidden" id="extrasPanel">
+        <div class="card menu-panel">
+            <h1>EXTRA</h1>
+            <p>Descubra os dois caminhos da Rota Zero e tente bater o seu melhor tempo.</p>
+            <button class="btn backBtn">VOLTAR</button>
+        </div>
+    </div>
+    <div class="overlay hidden" id="achievementsPanel">
+        <div class="card menu-panel">
+            <h1>CONQUISTAS</h1>
+            <p class="achievement">🔒 Primeira chegada<br><small>Complete a rota pela primeira vez.</small></p>
+            <p class="achievement">🔒 Explorador<br><small>Experimente o caminho alternativo.</small></p>
+            <button class="btn backBtn">VOLTAR</button>
         </div>
     </div>
     <div class="overlay hidden" id="finishOverlay">
