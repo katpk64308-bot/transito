@@ -1,9 +1,9 @@
 export function createScene() {
   const canvas = document.getElementById('three-canvas');
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: false, powerPreference: 'high-performance' });
-  renderer.setPixelRatio(Math.min(devicePixelRatio, 1.5));
+  renderer.setPixelRatio(Math.min(devicePixelRatio, 1.25));
   renderer.shadowMap.enabled = true;
-  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  renderer.shadowMap.type = THREE.PCFShadowMap;
 
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(0x8fc7e8);
@@ -23,7 +23,7 @@ export function createScene() {
   const sun = new THREE.DirectionalLight(0xfff2d6, 1.05);
   sun.position.set(-60, 110, 40);
   sun.castShadow = true;
-  sun.shadow.mapSize.set(1024, 1024);
+  sun.shadow.mapSize.set(512, 512);
   sun.shadow.camera.left = -160;
   sun.shadow.camera.right = 160;
   sun.shadow.camera.top = 160;

@@ -1,6 +1,7 @@
 import {
   finalPts, finishPoint, outerPts, ROAD_W_MAIN, ROAD_W_OUTER,
   ROAD_W_SHORT, shortcutPts, startPts
+  , trainPts
 } from './config.js';
 
 function sampleCurve(points, divisions) {
@@ -47,6 +48,55 @@ function buildRoad(samples, width, material, dashed) {
   roadMesh.receiveShadow = true;
   group.add(roadMesh);
 
+  const sidewalkMaterial = new THREE.MeshLambertMaterial({ color: 0x858585 });
+  const curbMaterial = new THREE.MeshLambertMaterial({ color: 0xd5aa32 });
+  sidewalkMaterial.side = THREE.DoubleSide;
+  curbMaterial.side = THREE.DoubleSide;
+  // A calçada fica fora da pista. Uma largura menor evita que ela cubra o
+  // asfalto em curvas e cruzamentos mais fechados.
+  const sidewalkWidth = Math.min(width * .25, 4.5);
+  const curbWidth = .55;
+
+  function addRoadSide(sideSign, innerDistance, outerDistance, sideMaterial) {
+    const sideVertices = [];
+    const sideIndices = [];
+
+    samples.forEach((point, index) => {
+      const previous = samples[Math.max(0, index - 1)];
+      const next = samples[Math.min(samples.length - 1, index + 1)];
+      const tangentX = next.x - previous.x;
+      const tangentZ = next.z - previous.z;
+      const length = Math.hypot(tangentX, tangentZ) || 1;
+      const normalX = -tangentZ / length;
+      const normalZ = tangentX / length;
+      sideVertices.push(
+        point.x + normalX * innerDistance * sideSign, .08, point.z + normalZ * innerDistance * sideSign,
+        point.x + normalX * outerDistance * sideSign, .08, point.z + normalZ * outerDistance * sideSign
+      );
+
+      if (index < samples.length - 1) {
+        const current = index * 2;
+        const nextPair = (index + 1) * 2;
+        sideIndices.push(current, nextPair, current + 1, current + 1, nextPair, nextPair + 1);
+      }
+    });
+
+    const sideGeometry = new THREE.BufferGeometry();
+    sideGeometry.setAttribute('position', new THREE.Float32BufferAttribute(sideVertices, 3));
+    sideGeometry.setIndex(sideIndices);
+    sideGeometry.computeVertexNormals();
+    const sideMesh = new THREE.Mesh(sideGeometry, sideMaterial);
+    sideMesh.receiveShadow = true;
+    group.add(sideMesh);
+  }
+
+  // A calçada é criada para os dois lados: primeiro o meio-fio amarelo,
+  // depois a faixa cinza mais larga.
+  [1, -1].forEach(side => {
+    addRoadSide(side, halfWidth + .05, halfWidth + curbWidth, curbMaterial);
+    addRoadSide(side, halfWidth + curbWidth, halfWidth + curbWidth + sidewalkWidth, sidewalkMaterial);
+  });
+
   if (dashed) {
     const lineGeometry = new THREE.BufferGeometry().setFromPoints(
       samples.map(point => new THREE.Vector3(point.x, .24, point.z))
@@ -77,12 +127,51 @@ function createCheckerTexture() {
   return new THREE.CanvasTexture(canvas);
 }
 
+function buildRailway(samples) {
+  const railway = new THREE.Group();
+  const railMaterial = new THREE.MeshLambertMaterial({ color: 0x303238 });
+  const sleeperMaterial = new THREE.MeshLambertMaterial({ color: 0x62442f });
+  const railWidth = 1.8;
+
+  for (let i = 0; i < samples.length - 1; i++) {
+    const a = samples[i];
+    const b = samples[i + 1];
+    const dx = b.x - a.x;
+    const dz = b.z - a.z;
+    const length = Math.hypot(dx, dz) || 1;
+    const heading = Math.atan2(dx, dz);
+    const normalX = -dz / length;
+    const normalZ = dx / length;
+    const centerX = (a.x + b.x) / 2;
+    const centerZ = (a.z + b.z) / 2;
+
+    for (const side of [-1, 1]) {
+      const rail = new THREE.Mesh(new THREE.BoxGeometry(.28, .22, length), railMaterial);
+      rail.position.set(centerX + normalX * railWidth * side, .22, centerZ + normalZ * railWidth * side);
+      rail.rotation.y = heading;
+      rail.receiveShadow = true;
+      railway.add(rail);
+    }
+
+    if (i % 3 === 0) {
+      const sleeper = new THREE.Mesh(new THREE.BoxGeometry(5.2, .16, .65), sleeperMaterial);
+      sleeper.position.set(centerX, .13, centerZ);
+      sleeper.rotation.y = heading;
+      sleeper.receiveShadow = true;
+      railway.add(sleeper);
+    }
+  }
+
+  return railway;
+}
+
 export function createTrack(scene) {
   const samples = {
     start: sampleCurve(startPts, 100),
     outer: sampleCurve(outerPts, 180),
     shortcut: sampleCurve(shortcutPts, 100),
-    final: sampleCurve(finalPts, 100)
+    final: sampleCurve(finalPts, 100),
+    train: sampleCurve(trainPts, 80)
   };
 
   const roadMaterial = new THREE.MeshLambertMaterial({ color: 0x35363b });
@@ -93,12 +182,13 @@ export function createTrack(scene) {
     buildRoad(samples.shortcut, ROAD_W_SHORT, shortcutMaterial, false),
     buildRoad(samples.final, ROAD_W_MAIN, roadMaterial, true)
   );
+  scene.add(buildRailway(samples.train));
 
   const roadSegments = [];
-  [[samples.start, ROAD_W_MAIN], [samples.outer, ROAD_W_OUTER], [samples.shortcut, ROAD_W_SHORT], [samples.final, ROAD_W_MAIN]]
-    .forEach(([road, width]) => {
+  [[samples.start, ROAD_W_MAIN, false], [samples.outer, ROAD_W_OUTER, false], [samples.shortcut, ROAD_W_SHORT, true], [samples.final, ROAD_W_MAIN, false]]
+    .forEach(([road, width, oneWay]) => {
       for (let i = 0; i < road.length - 1; i++) {
-        roadSegments.push({ a: road[i], b: road[i + 1], halfWidth: width / 2 });
+        roadSegments.push({ a: road[i], b: road[i + 1], halfWidth: width / 2, oneWay });
       }
     });
 
@@ -140,6 +230,54 @@ export function createTrack(scene) {
         }
       });
       return { dist: Math.sqrt(closestDistance), halfWidth: closestHalfWidth };
+    },
+    drivingSideAt(x, z) {
+      let closestDistance = Infinity;
+      let closestSegment = null;
+      let prioritySegment = null;
+
+      roadSegments.forEach(segment => {
+        const dx = segment.b.x - segment.a.x;
+        const dz = segment.b.z - segment.a.z;
+        const lengthSquared = dx * dx + dz * dz || 1;
+        const projection = Math.max(0, Math.min(1,
+          ((x - segment.a.x) * dx + (z - segment.a.z) * dz) / lengthSquared
+        ));
+        const nearestX = segment.a.x + projection * dx;
+        const nearestZ = segment.a.z + projection * dz;
+        const distance = (x - nearestX) ** 2 + (z - nearestZ) ** 2;
+
+        if (segment.oneWay && distance <= (segment.halfWidth + 12) ** 2) {
+          if (!prioritySegment || distance < prioritySegment.distanceSquared) {
+            const length = Math.sqrt(lengthSquared);
+            prioritySegment = {
+              tangentX: dx / length,
+              tangentZ: dz / length,
+              offset: ((x - nearestX) * (-dz) + (z - nearestZ) * dx) / length,
+              distance: Math.sqrt(distance),
+              distanceSquared: distance,
+              halfWidth: segment.halfWidth,
+              oneWay: true
+            };
+          }
+        }
+
+        if (distance < closestDistance) {
+          closestDistance = distance;
+          const length = Math.sqrt(lengthSquared);
+          closestSegment = {
+            tangentX: dx / length,
+            tangentZ: dz / length,
+            offset: ((x - nearestX) * (-dz) + (z - nearestZ) * dx) / length,
+            distance: Math.sqrt(distance),
+            halfWidth: segment.halfWidth,
+            oneWay: segment.oneWay
+          };
+        }
+      });
+
+      if (prioritySegment) delete prioritySegment.distanceSquared;
+      return prioritySegment || closestSegment;
     }
   };
 }

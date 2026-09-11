@@ -8,6 +8,9 @@ export function createUI() {
   const loadingOverlay = document.getElementById('loadingOverlay');
   const finishOverlay = document.getElementById('finishOverlay');
   const finishTimeElement = document.getElementById('finishTime');
+  const wrongWayElement = document.getElementById('wrongway');
+  const trafficStatus = document.getElementById('traffic-status');
+  const trafficStatusValue = document.getElementById('traffic-status-value');
 
   function showPanel(panelId) {
     document.querySelectorAll('.overlay').forEach(panel => panel.classList.add('hidden'));
@@ -32,10 +35,11 @@ export function createUI() {
   document.getElementById('playBtn').addEventListener('click', () => {
     mainMenu.classList.add('hidden');
     loadingOverlay.classList.remove('hidden');
+    // Dá tempo para os modelos 3D terminarem de carregar antes de iniciar.
     window.setTimeout(() => {
       loadingOverlay.classList.add('hidden');
       introOverlay.classList.remove('hidden');
-    }, 6000);
+    }, 12000);
   });
   document.querySelectorAll('[data-panel]').forEach(button => {
     button.addEventListener('click', () => showPanel(button.dataset.panel));
@@ -55,6 +59,10 @@ export function createUI() {
       lastUpdate = now;
       speedElement.textContent = Math.round(Math.abs(state.speed));
       timerElement.textContent = `${state.elapsed.toFixed(1)}s`;
+      wrongWayElement.classList.toggle('hidden', !state.contramao);
+      trafficStatus.classList.toggle('wrong', state.contramao);
+      trafficStatus.classList.toggle('correct', !state.contramao);
+      trafficStatusValue.textContent = state.contramao ? 'CONTRAMÃO' : 'MÃO CORRETA';
     }
   };
 }

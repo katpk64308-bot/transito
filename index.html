@@ -11,9 +11,14 @@
 <body>
     <div id="stage"><canvas id="three-canvas"></canvas></div>
     <div id="minimap-wrap"><canvas id="minimap" width="190" height="190"></canvas></div>
+    <div id="traffic-status" class="traffic-status correct">
+        <span class="traffic-status-label">SENTIDO</span>
+        <strong id="traffic-status-value">MÃO CORRETA</strong>
+    </div>
     <div class="hud" id="timerbox">TEMPO<b id="timerval">00.0s</b></div>
     <div class="hud" id="coordinates">X: 0.0&nbsp;&nbsp; Z: 0.0&nbsp;&nbsp; (F3 ocultar)</div>
     <div class="hud" id="speedbox"><span id="speedval">0</span><span id="speedunit">km/h</span></div>
+    <div class="hud hidden" id="wrongway">⚠ CONTRAMÃO</div>
     <div class="overlay main-menu" id="mainMenu">
         <div class="menu-card">
             <div class="menu-kicker">CORRIDA DE MOTO</div>

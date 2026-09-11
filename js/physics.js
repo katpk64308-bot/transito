@@ -21,8 +21,8 @@ export function updatePhysics(dt, bike, track, onFinish, colliders = []) {
   const brake = isDown('s', 'arrowdown');
   const left = isDown('a', 'arrowleft');
   const right = isDown('d', 'arrowright');
-  const { dist, halfWidth } = track.distanceToRoad(state.x, state.z);
-  const offRoad = dist > halfWidth;
+  const roadPosition = track.drivingSideAt(state.x, state.z);
+  const offRoad = !roadPosition || roadPosition.distance > roadPosition.halfWidth;
   const grip = offRoad ? .45 : 1;
   const topSpeed = offRoad ? physics.OFFROAD_MAX_SPEED : physics.MAX_SPEED;
 
@@ -52,6 +52,7 @@ export function updatePhysics(dt, bike, track, onFinish, colliders = []) {
     state.z = previousZ;
     state.speed = 0;
   }
+
   bike.group.position.set(state.x, 0, state.z);
   bike.group.rotation.y = state.heading;
 
@@ -60,6 +61,33 @@ export function updatePhysics(dt, bike, track, onFinish, colliders = []) {
   const wheelSpin = state.speed * dt * 2.2;
   bike.wheelFront.rotation.x -= wheelSpin;
   bike.wheelBack.rotation.x -= wheelSpin;
+
+  // A faixa da direita segue o sentido dos pontos da pista; a faixa da
+  // esquerda é reservada para quem vem no sentido contrário.
+  if (roadPosition && roadPosition.distance <= roadPosition.halfWidth && Math.abs(state.speed) > .5) {
+    // Durante a curva a direção da moto ainda não acompanha a nova rua.
+    // Espera terminar a manobra para evitar um falso aviso na entrada.
+    if (Math.abs(steer) > .15) {
+      state.contramao = false;
+    } else {
+    const movingWithRoute = state.speed * (
+      Math.sin(state.heading) * roadPosition.tangentX +
+      Math.cos(state.heading) * roadPosition.tangentZ
+    ) > 0;
+
+    if (roadPosition.oneWay) {
+      // A rua amarela é mão única: só é permitido seguir o traçado dela.
+      state.contramao = movingWithRoute;
+    } else {
+      // Nas ruas de mão dupla, cada sentido usa um lado da linha central.
+      // O offset positivo é o lado esquerdo da direção desenhada na pista.
+      const onLeftSide = roadPosition.offset > 1.5;
+      state.contramao = onLeftSide !== movingWithRoute;
+    }
+    }
+  } else {
+    state.contramao = false;
+  }
 
   const distanceToFinish = Math.hypot(state.x - finishPoint[0], state.z - finishPoint[1]);
   if (state.raceStarted && !state.raceFinished && distanceToFinish < 7) onFinish();

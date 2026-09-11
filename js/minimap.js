@@ -1,4 +1,4 @@
-import { finalPts, finishPoint, outerPts, shortcutPts, startPts } from './config.js';
+import { finalPts, finishPoint, outerPts, shortcutPts, startPts, trainPts } from './config.js';
 import { state } from './state.js';
 
 export function createMinimap(samples) {
@@ -9,7 +9,7 @@ export function createMinimap(samples) {
   canvas.height = 190 * dpr;
   context.scale(dpr, dpr);
 
-  const allPoints = [...startPts, ...outerPts, ...shortcutPts, ...finalPts];
+  const allPoints = [...startPts, ...outerPts, ...shortcutPts, ...finalPts, ...trainPts];
   const minX = Math.min(...allPoints.map(point => point[0])) - 10;
   const maxX = Math.max(...allPoints.map(point => point[0])) + 10;
   const minZ = Math.min(...allPoints.map(point => point[1])) - 10;
@@ -42,6 +42,7 @@ export function createMinimap(samples) {
   drawPath(staticContext, samples.outer, '#e6e6e6d9', 4);
   drawPath(staticContext, samples.shortcut, '#ffb020d9', 3);
   drawPath(staticContext, samples.final, '#e6e6e6d9', 4);
+  drawPath(staticContext, samples.train, '#b62b2bd9', 3);
 
   let [staticX, staticY] = project(...startPts[0]);
   staticContext.fillStyle = '#ffcc33';

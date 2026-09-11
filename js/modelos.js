@@ -34,7 +34,9 @@ function configureModel(model, config) {
   model.traverse(object => {
     if (!object.isMesh) return;
     object.castShadow = config.castShadow ?? false;
-    object.receiveShadow = true;
+    // Os modelos de cenário são grandes; receber sombras neles custa muitos
+    // pixels por quadro e não muda a jogabilidade.
+    object.receiveShadow = false;
 
     const materials = Array.isArray(object.material) ? object.material : [object.material];
     materials.forEach(material => {

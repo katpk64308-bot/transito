@@ -9,10 +9,12 @@ import { createMinimap } from './minimap.js';
 import { createUI } from './ui.js';
 import { createCoordinates } from './coordinates.js';
 import { createModels } from './modelos.js';
+import { createTrafficCar } from './veiculoNPC.js';
 
 const { renderer, scene, camera } = createScene();
 const track = createTrack(scene);
 const models = createModels(scene);
+const updateTrafficCar = createTrafficCar(scene, track);
 const bike = buildBike();
 scene.add(bike.group);
 
@@ -28,6 +30,7 @@ function animate() {
   const dt = Math.min(clock.getDelta(), .05);
 
   if (!state.raceFinished) updatePhysics(dt, bike, track, ui.finishRace, models.colliders);
+  updateTrafficCar(dt);
   updateCamera(dt);
   drawMinimap();
   updateCoordinates(state);

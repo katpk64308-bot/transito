@@ -19,11 +19,17 @@ export const outerPts = scalePoints([
 
 // Atalho interno, inspirado na área de pit lane do desenho enviado.
 export const shortcutPts = scalePoints([
-  [-45, 60], [-5, 75], [35, 70], [70, 50], [95, 25], [115, 0]
+  [-45, 60], [-5, 75], [35, 70], [70, 50], [95, 25], [115, 0], [117.7, -3.5]
 ]);
 
-// Reta final até a bandeirada.
+// Reta final até a bandeirada. Ela mantém a entrada original; a rua amarela
+// continua como um prolongamento próprio até X=290, Z=-10.
 export const finalPts = scalePoints([[115, 0], [80, -2], [45, 0], [10, 0]]);
+// Traçado da linha de trem indicado no minimapa.
+export const trainPts = scalePoints([
+  [-120, 170], [-75, 145], [-25, 120], [10, 112], [50, 96],
+  [95, 76], [140, 48], [185, 20], [225, 0]
+]);
 // A chegada fica no ponto indicado na imagem, já dentro do trecho interno.
 export const finishPoint = scalePoints([[35, 70]])[0];
 // Pista mais larga para facilitar as curvas e deixar a condução mais confortável.
