@@ -19,7 +19,7 @@
 // └── js/
 //     └── bike.js
 
-const MODEL_URL = "modelo/modelo_bike/scene.gltf";
+const MODEL_URL = "modelo/model-bike/scene.gltf";
 
 
 // Comprimento aproximado da moto dentro do jogo
