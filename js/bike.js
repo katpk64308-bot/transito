@@ -291,6 +291,18 @@ export function buildBike() {
         return moto;
     }
 
+    // Exibe uma moto simples imediatamente. Ela só é substituída quando o
+    // arquivo externo terminar de carregar com sucesso, evitando que o
+    // jogador fique sem veículo durante uma falha ou download lento.
+    const fallback = criarFallback();
+    modelHolder.add(fallback);
+
+    function manterFallback() {
+        if (!modelHolder.children.includes(fallback)) {
+            modelHolder.add(fallback);
+        }
+    }
+
 
     // -----------------------------------------------------------------------
     // PREPARAR MODELO
@@ -559,9 +571,7 @@ export function buildBike() {
                             "[bike.js] O GLB não possui uma cena."
                         );
 
-                        modelHolder.add(
-                            criarFallback()
-                        );
+                        manterFallback();
 
                         return;
                     }
@@ -575,7 +585,7 @@ export function buildBike() {
                         modelo
                     );
 
-
+                    modelHolder.remove(fallback);
                     modelHolder.add(
                         modelo
                     );
@@ -644,9 +654,7 @@ export function buildBike() {
 
 
                     // Não deixa o jogador sem moto.
-                    modelHolder.add(
-                        criarFallback()
-                    );
+                    manterFallback();
 
                 }
 
@@ -664,9 +672,7 @@ export function buildBike() {
                 );
 
 
-                modelHolder.add(
-                    criarFallback()
-                );
+                manterFallback();
 
             }
         );
