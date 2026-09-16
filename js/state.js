@@ -15,6 +15,11 @@ export const state = {
   raceStarted: false,
   raceFinished: false,
   contramao: false,
+  foraEstrada: false,
+  collisionAlert: null,
+  alertUntil: 0,
+  lawAlerts: [],
+  lawBroken: false,
   startTime: 0,
   elapsed: 0
 };

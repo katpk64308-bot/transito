@@ -28,7 +28,10 @@ export const finalPts = scalePoints([[115, 0], [80, -2], [45, 0], [10, 0]]);
 // Traçado da linha de trem indicado no minimapa.
 export const trainPts = scalePoints([
   [-120, 170], [-75, 145], [-25, 120], [10, 112], [50, 96],
-  [95, 76], [140, 48], [185, 20], [225, 0]
+  [95, 76], [140, 48], [185, 20], [225, 0],
+  [260, 30], [285, 100], [280, 180], [240, 260],
+  [180, 320], [100, 340], // ponto mundial x=250, z=850
+  [20, 320], [-60, 280], [-110, 230]
 ]);
 // A chegada fica no ponto indicado na imagem, já dentro do trecho interno.
 export const finishPoint = scalePoints([[35, 70]])[0];

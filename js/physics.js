@@ -22,7 +22,9 @@ export function updatePhysics(dt, bike, track, onFinish, colliders = []) {
   const left = isDown('a', 'arrowleft');
   const right = isDown('d', 'arrowright');
   const roadPosition = track.drivingSideAt(state.x, state.z);
-  const offRoad = !roadPosition || roadPosition.distance > roadPosition.halfWidth;
+  const roadLimit = roadPosition ? roadPosition.halfWidth + (roadPosition.roadMargin || 0) : 0;
+  const offRoad = !roadPosition || roadPosition.distance > roadLimit;
+  state.foraEstrada = offRoad;
   const grip = offRoad ? .45 : 1;
   const topSpeed = offRoad ? physics.OFFROAD_MAX_SPEED : physics.MAX_SPEED;
 
@@ -64,7 +66,7 @@ export function updatePhysics(dt, bike, track, onFinish, colliders = []) {
 
   // A faixa da direita segue o sentido dos pontos da pista; a faixa da
   // esquerda é reservada para quem vem no sentido contrário.
-  if (roadPosition && roadPosition.distance <= roadPosition.halfWidth && Math.abs(state.speed) > .5) {
+  if (roadPosition && roadPosition.distance <= roadLimit && Math.abs(state.speed) > .5) {
     // Durante a curva a direção da moto ainda não acompanha a nova rua.
     // Espera terminar a manobra para evitar um falso aviso na entrada.
     if (Math.abs(steer) > .15) {
@@ -77,7 +79,7 @@ export function updatePhysics(dt, bike, track, onFinish, colliders = []) {
 
     if (roadPosition.oneWay) {
       // A rua amarela é mão única: só é permitido seguir o traçado dela.
-      state.contramao = movingWithRoute;
+      state.contramao = !movingWithRoute;
     } else {
       // Nas ruas de mão dupla, cada sentido usa um lado da linha central.
       // O offset positivo é o lado esquerdo da direção desenhada na pista.

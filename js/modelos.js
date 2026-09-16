@@ -1,30 +1,7 @@
 // Configuração dos modelos do cenário.
 // Para mover um modelo, altere position, scale e rotation.
-const MODEL_CONFIG = {
-  escola: {
-    file: 'modelo/escola.fbx',
-    position: { x: 100, y: 0, z: 200 },
-    scale: { x: .15, y: .17, z: .15 },
-    rotation: { x: 0, y: 60, z: 0 },
-    castShadow: false,
-    collision: {
-      enabled: true,
-      size: { x: 42, z: 24 },
-      offset: { x: 0, z: 0 }
-    }
-  },
-  evermontanha: {
-    file: 'modelo/montanha.fbx',
-    position: { x: 0, y: -10, z: 100 },
-    scale: { x: 1, y: 1, z: 1 },
-    rotation: { x: 0, y: 80, z: 0 },
-    collision: {
-      enabled: false,
-      size: { x: 30, z: 25 },
-      offset: { x: 0, z: 0 }
-    }
-  }
-};
+// Nenhum modelo de cenário está ativo no momento.
+const MODEL_CONFIG = {};
 
 function configureModel(model, config) {
   model.position.set(config.position.x, config.position.y, config.position.z);

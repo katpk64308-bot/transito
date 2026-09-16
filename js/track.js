@@ -4,9 +4,9 @@ import {
   , trainPts
 } from './config.js';
 
-function sampleCurve(points, divisions) {
+function sampleCurve(points, divisions, closed = false) {
   const vectors = points.map(point => new THREE.Vector3(point[0], 0, point[1]));
-  const curve = new THREE.CatmullRomCurve3(vectors, false, 'catmullrom', .5);
+  const curve = new THREE.CatmullRomCurve3(vectors, closed, 'catmullrom', .5);
   return curve.getPoints(divisions);
 }
 
@@ -165,13 +165,18 @@ function buildRailway(samples) {
   return railway;
 }
 
+// A superfície visível da pista também inclui meio-fio, calçada e as áreas
+// de transição dos cruzamentos. A física usa esta margem para não marcar como
+// fora da estrada uma posição que ainda está sobre essa área pavimentada.
+const ROAD_DETECTION_MARGIN = 8;
+
 export function createTrack(scene) {
   const samples = {
     start: sampleCurve(startPts, 100),
     outer: sampleCurve(outerPts, 180),
     shortcut: sampleCurve(shortcutPts, 100),
     final: sampleCurve(finalPts, 100),
-    train: sampleCurve(trainPts, 80)
+    train: sampleCurve(trainPts, 180, true)
   };
 
   const roadMaterial = new THREE.MeshLambertMaterial({ color: 0x35363b });
@@ -247,7 +252,10 @@ export function createTrack(scene) {
         const nearestZ = segment.a.z + projection * dz;
         const distance = (x - nearestX) ** 2 + (z - nearestZ) ** 2;
 
-        if (segment.oneWay && distance <= (segment.halfWidth + 12) ** 2) {
+        // Só prioriza o atalho quando a moto realmente está sobre a sua
+        // superfície. A margem antiga fazia o atalho capturar a rua principal
+        // inteira na curva de entrada.
+        if (segment.oneWay && distance <= (segment.halfWidth + ROAD_DETECTION_MARGIN) ** 2) {
           if (!prioritySegment || distance < prioritySegment.distanceSquared) {
             const length = Math.sqrt(lengthSquared);
             prioritySegment = {
@@ -257,6 +265,7 @@ export function createTrack(scene) {
               distance: Math.sqrt(distance),
               distanceSquared: distance,
               halfWidth: segment.halfWidth,
+              roadMargin: ROAD_DETECTION_MARGIN,
               oneWay: true
             };
           }
@@ -271,6 +280,7 @@ export function createTrack(scene) {
             offset: ((x - nearestX) * (-dz) + (z - nearestZ) * dx) / length,
             distance: Math.sqrt(distance),
             halfWidth: segment.halfWidth,
+            roadMargin: ROAD_DETECTION_MARGIN,
             oneWay: segment.oneWay
           };
         }

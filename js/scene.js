@@ -2,7 +2,7 @@ export function createScene() {
   const canvas = document.getElementById('three-canvas');
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: false, powerPreference: 'high-performance' });
   renderer.setPixelRatio(Math.min(devicePixelRatio, 1.25));
-  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.enabled = localStorage.getItem('shadowsEnabled') !== 'false';
   renderer.shadowMap.type = THREE.PCFShadowMap;
 
   const scene = new THREE.Scene();
