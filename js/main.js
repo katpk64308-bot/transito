@@ -9,7 +9,7 @@ import { createMinimap } from './minimap.js';
 import { createUI } from './ui.js';
 import { createCoordinates } from './coordinates.js';
 import { createModels } from './modelos.js';
-import { createTrafficCar, createTrafficTrain } from './veiculoNPC.js';
+import { createTrafficCar, createTrafficTrain } from './NPCs/veiculoNPC.js';
 
 const { renderer, scene, camera } = createScene();
 

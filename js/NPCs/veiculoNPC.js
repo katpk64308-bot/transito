@@ -1,4 +1,4 @@
-import { state } from './state.js';
+import { state } from '../state.js';
 
 function createCar(color = 0xd93636) {
   const car = new THREE.Group();
