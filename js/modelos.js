@@ -38,9 +38,67 @@ const MODEL_CONFIG = {
   predio1: {
     file: 'modelo/cidade/predio1/Flatiron_Building_v1_L1.123cb356d0cd-9f00-4bc4-be97-260db4c03d17/13943_Flatiron_Building_v1_l1.obj',
     mtl: 'modelo/cidade/predio1/Flatiron_Building_v1_L1.123cb356d0cd-9f00-4bc4-be97-260db4c03d17/13943_Flatiron_Building_v1_l1.mtl',
-    position: { x: 170, y: 0, z: 80 },
+    position: { x: 174, y: 0, z: 85 },
     scale: { x: .007, y: .007, z: .007 },
     rotation: { x: -Math.PI / 2, y: 0, z: 0 },
+    instances: [
+      { position: { x: 174, y: 0, z: 85 } },
+      { position: { x: -230, y: 0, z: -30 } },
+      { position: { x: -220, y: 0, z: 220 } },
+      { position: { x: 80, y: 0, z: 315 } },
+      { position: { x: 360, y: 0, z: 100 } }
+    ],
+    castShadow: false,
+    collision: { enabled: false },
+    alignGround: true
+  },
+  predio2: {
+    file: 'modelo/cidade/predio2/chrysler_building_v1_L1.123c61b463a0-1adf-4cf0-9acf-5e8e8f908a80/13942_Chrysler_Building_V1_l1.obj',
+    mtl: 'modelo/cidade/predio2/chrysler_building_v1_L1.123c61b463a0-1adf-4cf0-9acf-5e8e8f908a80/13942_Chrysler_Building_V1_l1.mtl',
+    position: { x: 428, y: 0, z: 282 },
+    scale: { x: .002, y: .002, z: .002 },
+    rotation: { x: -Math.PI / 2, y: 0, z: 0 },
+    instances: [
+      { position: { x: 428, y: 0, z: 282 } },
+      { position: { x: 340, y: 0, z: 350 } },
+      { position: { x: 210, y: 0, z: 400 } },
+      { position: { x: -80, y: 0, z: 420 } },
+      { position: { x: -250, y: 0, z: 150 } }
+    ],
+    castShadow: false,
+    collision: { enabled: false },
+    alignGround: true
+  },
+  predio3: {
+    file: 'modelo/cidade/predio3/Massachussetshall.obj',
+    mtl: 'modelo/cidade/predio3/Massachussetshall.mtl',
+    position: { x: -193, y: 0, z: 251 },
+    scale: { x: .22, y: .22, z: .22 },
+    rotation: { x: 0, y: 0, z: 0 },
+    instances: [
+      { position: { x: -193, y: 0, z: 251 } },
+      { position: { x: -150, y: 0, z: 360 } },
+      { position: { x: 80, y: 0, z: 430 } },
+      { position: { x: 300, y: 0, z: 260 } },
+      { position: { x: 430, y: 0, z: 70 } }
+    ],
+    castShadow: false,
+    collision: { enabled: false },
+    alignGround: true
+  },
+  predio4: {
+    file: 'modelo/cidade/predio4/Hospital_Building_V2_L3.123c3359fae7-7089-4dd3-993b-ce8739108426/10075_Hospital Building_V1_L3.obj',
+    mtl: 'modelo/cidade/predio4/Hospital_Building_V2_L3.123c3359fae7-7089-4dd3-993b-ce8739108426/10075_Hospital Building_V1_L3.mtl',
+    position: { x: 246, y: 0, z: -27 },
+    scale: { x: .009, y: .009, z: .009 },
+    rotation: { x: -Math.PI / 2, y: 0, z: 0 },
+    instances: [
+      { position: { x: 246, y: 0, z: -27 } },
+      { position: { x: 90, y: 0, z: -30 } },
+      { position: { x: -100, y: 0, z: -27 } },
+      { position: { x: -240, y: 0, z: 80 } },
+      { position: { x: 450, y: 0, z: 40 } }
+    ],
     castShadow: false,
     collision: { enabled: false },
     alignGround: true
