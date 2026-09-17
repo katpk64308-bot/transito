@@ -4,38 +4,86 @@ export function createUI(
   onRaceStart = null,
   onRaceFinish = null
 ) {
-  const speedElement = document.getElementById('speedval');
-  const timerElement = document.getElementById('timerval');
-  const mainMenu = document.getElementById('mainMenu');
-  const loadingOverlay = document.getElementById('loadingOverlay');
-  const loadingTipElement = document.getElementById('loadingTip');
-  const introOverlay = document.getElementById('introOverlay');
-  const finishOverlay = document.getElementById('finishOverlay');
-  const finishTimeElement = document.getElementById('finishTime');
-  const trafficStatus = document.getElementById('traffic-status');
-  const shadowsToggle = document.getElementById('shadowsToggle');
-  const invertCamera = document.getElementById('invertCamera');
-  const gameElements = document.querySelectorAll('.game-element');
+  const speedElement =
+    document.getElementById('speedval');
+
+  const timerElement =
+    document.getElementById('timerval');
+
+  const mainMenu =
+    document.getElementById('mainMenu');
+
+  const loadingOverlay =
+    document.getElementById('loadingOverlay');
+
+  const loadingTipElement =
+    document.getElementById('loadingTip');
+
+  const introOverlay =
+    document.getElementById('introOverlay');
+
+  const finishOverlay =
+    document.getElementById('finishOverlay');
+
+  const finishTimeElement =
+    document.getElementById('finishTime');
+
+  const violationHistoryElement =
+    document.getElementById('violationHistory');
+
+  const trafficStatus =
+    document.getElementById('traffic-status');
+
+  const shadowsToggle =
+    document.getElementById('shadowsToggle');
+
+  const invertCamera =
+    document.getElementById('invertCamera');
+
+  const gameElements =
+    document.querySelectorAll('.game-element');
 
   const achievementElements = {
-    first: document.getElementById('achievement-first'),
-    speed: document.getElementById('achievement-speed'),
-    clean: document.getElementById('achievement-clean')
+    first: document.getElementById(
+      'achievement-first'
+    ),
+    speed: document.getElementById(
+      'achievement-speed'
+    ),
+    clean: document.getElementById(
+      'achievement-clean'
+    )
   };
 
-  const achievementStorageKey = 'rotaZeroAchievements';
+  const achievementStorageKey =
+    'rotaZeroAchievements';
 
-  let unlockedAchievements = JSON.parse(
-    localStorage.getItem(achievementStorageKey) || '{}'
-  );
+  let unlockedAchievements =
+    JSON.parse(
+      localStorage.getItem(
+        achievementStorageKey
+      ) || '{}'
+    );
 
   function renderAchievements() {
-    Object.entries(achievementElements).forEach(([id, element]) => {
-      const unlocked = Boolean(unlockedAchievements[id]);
+    Object.entries(
+      achievementElements
+    ).forEach(([id, element]) => {
+      const unlocked =
+        Boolean(
+          unlockedAchievements[id]
+        );
 
-      element.classList.toggle('unlocked', unlocked);
+      element.classList.toggle(
+        'unlocked',
+        unlocked
+      );
 
-      element.querySelector('.achievement-icon').textContent =
+      element
+        .querySelector(
+          '.achievement-icon'
+        )
+        .textContent =
         unlocked ? '✅' : '🔒';
     });
   }
@@ -44,13 +92,19 @@ export function createUI(
     unlockedAchievements = {
       ...unlockedAchievements,
       first: true,
-      speed: unlockedAchievements.speed || state.elapsed < 84,
-      clean: unlockedAchievements.clean || !state.lawBroken
+      speed:
+        unlockedAchievements.speed ||
+        state.elapsed < 84,
+      clean:
+        unlockedAchievements.clean ||
+        !state.lawBroken
     };
 
     localStorage.setItem(
       achievementStorageKey,
-      JSON.stringify(unlockedAchievements)
+      JSON.stringify(
+        unlockedAchievements
+      )
     );
 
     renderAchievements();
@@ -66,18 +120,21 @@ export function createUI(
         'Lei: o condutor deve manter domínio do veículo e atenção permanente. Respeite as regras de circulação para bicicletas elétricas. CTB, art. 28, e Resolução CONTRAN 996/2023, art. 11.',
         'collision'
       ],
+
       train: [
         'COLISÃO',
         'VOCÊ BATEU NO TREM',
         'Lei: antes de transpor uma linha férrea, o condutor deve parar o veículo. Para bicicletas elétricas, valem as regras do CTB para bicicletas. CTB, art. 212, e Resolução CONTRAN 996/2023, art. 11.',
         'collision'
       ],
+
       offroad: [
         'ATENÇÃO',
         'FORA DA ESTRADA',
         'Lei: a circulação da bicicleta elétrica deve respeitar a regulamentação do órgão responsável pela via. Volte para a estrada permitida. Resolução CONTRAN 996/2023, arts. 6º e 11.',
         'offroad'
       ],
+
       wrong: [
         'ATENÇÃO',
         'ENTROU NA CONTRAMÃO',
@@ -90,25 +147,38 @@ export function createUI(
   }
 
   shadowsToggle.checked =
-    localStorage.getItem('shadowsEnabled') !== 'false';
+    localStorage.getItem(
+      'shadowsEnabled'
+    ) !== 'false';
 
-  shadowsToggle.addEventListener('change', () => {
-    localStorage.setItem(
-      'shadowsEnabled',
-      String(shadowsToggle.checked)
-    );
+  shadowsToggle.addEventListener(
+    'change',
+    () => {
+      localStorage.setItem(
+        'shadowsEnabled',
+        String(
+          shadowsToggle.checked
+        )
+      );
 
-    window.dispatchEvent(
-      new CustomEvent('shadowsChanged', {
-        detail: shadowsToggle.checked
-      })
-    );
-  });
+      window.dispatchEvent(
+        new CustomEvent(
+          'shadowsChanged',
+          {
+            detail:
+              shadowsToggle.checked
+          }
+        )
+      );
+    }
+  );
 
   function showPanel(panelId) {
     document
       .querySelectorAll('.overlay')
-      .forEach(panel => panel.classList.add('hidden'));
+      .forEach(panel =>
+        panel.classList.add('hidden')
+      );
 
     document
       .getElementById(panelId)
@@ -126,46 +196,70 @@ export function createUI(
   ];
 
   function showRandomLoadingTip() {
-    const currentTip = loadingTipElement.textContent;
+    const currentTip =
+      loadingTipElement.textContent;
 
-    const availableTips = loadingTips.filter(
-      tip => tip !== currentTip
-    );
+    const availableTips =
+      loadingTips.filter(
+        tip => tip !== currentTip
+      );
 
     loadingTipElement.textContent =
       availableTips[
-        Math.floor(Math.random() * availableTips.length)
+        Math.floor(
+          Math.random() *
+          availableTips.length
+        )
       ];
   }
 
   function startRace() {
-    if (!gameVisible || state.raceStarted) return;
+    if (
+      !gameVisible ||
+      state.raceStarted
+    ) {
+      return;
+    }
 
     if (invertCamera) {
-      state.cameraInvertY = invertCamera.checked;
+      state.cameraInvertY =
+        invertCamera.checked;
     }
 
     state.raceStarted = true;
-    state.startTime = performance.now();
+    state.startTime =
+      performance.now();
 
-    introOverlay.classList.add('hidden');
+    introOverlay.classList.add(
+      'hidden'
+    );
 
     onRaceStart?.();
   }
 
   function showGame() {
-    gameElements.forEach(element =>
-      element.classList.remove('game-hidden')
+    gameElements.forEach(
+      element =>
+        element.classList.remove(
+          'game-hidden'
+        )
     );
 
     gameVisible = true;
-    introOverlay.classList.remove('hidden');
+
+    introOverlay.classList.remove(
+      'hidden'
+    );
   }
 
   function finishRace() {
     state.raceFinished = true;
+
     state.elapsed =
-      (performance.now() - state.startTime) / 1000;
+      (
+        performance.now() -
+        state.startTime
+      ) / 1000;
 
     onRaceFinish?.();
 
@@ -174,53 +268,123 @@ export function createUI(
     finishTimeElement.textContent =
       `${state.elapsed.toFixed(1)}s`;
 
-    finishOverlay.classList.remove('hidden');
+    violationHistoryElement.replaceChildren();
+
+    const lawHistory =
+      state.lawHistory || [];
+
+    if (lawHistory.length === 0) {
+      const cleanMessage =
+        document.createElement('p');
+
+      cleanMessage.className =
+        'clean-race';
+
+      cleanMessage.textContent =
+        'Nenhuma infração registrada.';
+
+      violationHistoryElement.appendChild(
+        cleanMessage
+      );
+    } else {
+      lawHistory.forEach(type => {
+        const copy =
+          getLawAlert(type);
+
+        if (!copy) return;
+
+        const item =
+          document.createElement('div');
+
+        item.className =
+          `violation-item ${copy[3]}`;
+
+        item.textContent =
+          copy[1];
+
+        violationHistoryElement.appendChild(
+          item
+        );
+      });
+    }
+
+    finishOverlay.classList.remove(
+      'hidden'
+    );
   }
 
   document
     .getElementById('playBtn')
-    .addEventListener('click', () => {
-      mainMenu.classList.add('hidden');
-      loadingOverlay.classList.remove('hidden');
+    .addEventListener(
+      'click',
+      () => {
+        mainMenu.classList.add(
+          'hidden'
+        );
 
-      showRandomLoadingTip();
+        loadingOverlay.classList.remove(
+          'hidden'
+        );
 
-      loadingTipTimer = window.setInterval(
-        showRandomLoadingTip,
-        6000
-      );
+        showRandomLoadingTip();
 
-      window.setTimeout(() => {
-        window.clearInterval(loadingTipTimer);
-        loadingOverlay.classList.add('hidden');
-        showGame();
-      }, 15000);
-    });
+        loadingTipTimer =
+          window.setInterval(
+            showRandomLoadingTip,
+            6000
+          );
+
+        window.setTimeout(
+          () => {
+            window.clearInterval(
+              loadingTipTimer
+            );
+
+            loadingOverlay.classList.add(
+              'hidden'
+            );
+
+            showGame();
+          },
+          15000
+        );
+      }
+    );
 
   document
     .getElementById('startBtn')
-    .addEventListener('click', startRace);
+    .addEventListener(
+      'click',
+      startRace
+    );
 
   document
     .querySelectorAll('[data-panel]')
     .forEach(button => {
-      button.addEventListener('click', () =>
-        showPanel(button.dataset.panel)
+      button.addEventListener(
+        'click',
+        () =>
+          showPanel(
+            button.dataset.panel
+          )
       );
     });
 
   document
     .querySelectorAll('.backBtn')
     .forEach(button => {
-      button.addEventListener('click', () =>
-        showPanel('mainMenu')
+      button.addEventListener(
+        'click',
+        () =>
+          showPanel('mainMenu')
       );
     });
 
   document
     .getElementById('restartBtn')
-    .addEventListener('click', () =>
-      location.reload()
+    .addEventListener(
+      'click',
+      () => location.reload()
     );
 
   return {
@@ -234,26 +398,39 @@ export function createUI(
         !state.raceFinished
       ) {
         state.elapsed =
-          (performance.now() - state.startTime) / 1000;
+          (
+            performance.now() -
+            state.startTime
+          ) / 1000;
       }
 
-      const now = performance.now();
+      const now =
+        performance.now();
 
-      if (now - lastUpdate < 80) return;
+      if (
+        now - lastUpdate < 80
+      ) {
+        return;
+      }
 
       lastUpdate = now;
 
       speedElement.textContent =
-        Math.round(Math.abs(state.speed));
+        Math.round(
+          Math.abs(state.speed)
+        );
 
       timerElement.textContent =
         `${state.elapsed.toFixed(1)}s`;
 
-      const alertNow = performance.now();
+      const alertNow =
+        performance.now();
 
       state.lawAlerts =
         state.lawAlerts.filter(
-          alert => alert.expiresAt > alertNow
+          alert =>
+            alert.expiresAt >
+            alertNow
         );
 
       trafficStatus.replaceChildren();
@@ -263,21 +440,29 @@ export function createUI(
         state.lawAlerts.length === 0
       );
 
-      state.lawAlerts.forEach(alert => {
-        const copy = getLawAlert(alert.type);
+      state.lawAlerts.forEach(
+        alert => {
+          const copy =
+            getLawAlert(alert.type);
 
-        if (!copy) return;
+          if (!copy) return;
 
-        const card = document.createElement('div');
+          const card =
+            document.createElement(
+              'div'
+            );
 
-        card.className =
-          `traffic-alert ${copy[3]}`;
+          card.className =
+            `traffic-alert ${copy[3]}`;
 
-        card.innerHTML =
-          `<span class="traffic-status-label">${copy[0]}</span><strong>${copy[1]}</strong><p>${copy[2]}</p>`;
+          card.innerHTML =
+            `<span class="traffic-status-label">${copy[0]}</span><strong>${copy[1]}</strong><p>${copy[2]}</p>`;
 
-        trafficStatus.appendChild(card);
-      });
+          trafficStatus.appendChild(
+            card
+          );
+        }
+      );
     }
   };
 }

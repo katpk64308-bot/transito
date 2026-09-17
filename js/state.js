@@ -26,6 +26,7 @@ export const state = {
   collisionAlert: null,
   alertUntil: 0,
   lawAlerts: [],
+  lawHistory: [],
   lawBroken: false,
 
   startTime: 0,

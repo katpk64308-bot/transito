@@ -17,9 +17,14 @@ const track = createTrack(scene);
 
 const models = createModels(scene);
 
-const updateTrafficCar = createTrafficCar(scene, track);
-
 const updateTrafficTrain = createTrafficTrain(scene, track);
+
+const updateTrafficCar = createTrafficCar(
+  scene,
+  track,
+  updateTrafficTrain.getHitboxes,
+  track.getRailwaySignalStates
+);
 
 const bike = buildBike();
 
@@ -44,7 +49,10 @@ const updateCoordinates = createCoordinates(scene);
 
 setupControls(ui.startRace);
 
-const drawMinimap = createMinimap(track.samples);
+const drawMinimap = createMinimap(
+  track.samples,
+  updateTrafficTrain.getMinimapState
+);
 
 const clock = new THREE.Clock();
 
@@ -58,14 +66,110 @@ function checkTrafficCollisions() {
     ...updateTrafficTrain.getHitboxes()
   ];
 
-  const bikeRadius = 2.4;
+  const bikeRadius = 1.4;
 
-  return hitboxes.find(hitbox => {
-    const dx = state.x - hitbox.x;
-    const dz = state.z - hitbox.z;
+  return hitboxes.map(hitbox => {
+    let dx = state.x - hitbox.x;
+    let dz = state.z - hitbox.z;
+    let collisionDistance;
 
-    return Math.hypot(dx, dz) <= bikeRadius + hitbox.radius;
-  }) || null;
+    if (hitbox.halfWidth && hitbox.halfLength) {
+      const cos = Math.cos(hitbox.heading);
+      const sin = Math.sin(hitbox.heading);
+
+      const localX = dx * cos - dz * sin;
+      const localZ = dx * sin + dz * cos;
+
+      const closestX = Math.max(
+        -hitbox.halfWidth,
+        Math.min(hitbox.halfWidth, localX)
+      );
+
+      const closestZ = Math.max(
+        -hitbox.halfLength,
+        Math.min(hitbox.halfLength, localZ)
+      );
+
+      const closestWorldX =
+        hitbox.x + closestX * cos + closestZ * sin;
+
+      const closestWorldZ =
+        hitbox.z - closestX * sin + closestZ * cos;
+
+      dx = state.x - closestWorldX;
+      dz = state.z - closestWorldZ;
+      collisionDistance = Math.hypot(dx, dz);
+
+      if (collisionDistance < .001) {
+        const distanceToSide =
+          hitbox.halfWidth - Math.abs(localX);
+
+        const distanceToEnd =
+          hitbox.halfLength - Math.abs(localZ);
+
+        if (distanceToSide < distanceToEnd) {
+          const side = Math.sign(localX) || 1;
+          dx = side * cos;
+          dz = -side * sin;
+        } else {
+          const side = Math.sign(localZ) || 1;
+          dx = side * sin;
+          dz = side * cos;
+        }
+
+        collisionDistance = 0;
+      }
+    } else {
+      collisionDistance = Math.hypot(dx, dz);
+    }
+
+    const overlap = hitbox.halfWidth && hitbox.halfLength
+      ? bikeRadius - collisionDistance
+      : bikeRadius + hitbox.radius - collisionDistance;
+
+    return {
+      ...hitbox,
+      dx,
+      dz,
+      distance: collisionDistance,
+      overlap
+    };
+  }).find(collision => collision.overlap >= 0) || null;
+}
+
+function resolveTrafficCollision(collision) {
+  let normalX = collision.dx;
+  let normalZ = collision.dz;
+  const distance = collision.distance || 1;
+
+  if (collision.distance < .001) {
+    const normalLength = Math.hypot(normalX, normalZ);
+
+    if (normalLength > .001) {
+      normalX /= normalLength;
+      normalZ /= normalLength;
+    } else {
+      normalX = -Math.sin(state.heading);
+      normalZ = -Math.cos(state.heading);
+    }
+  } else {
+    normalX /= distance;
+    normalZ /= distance;
+  }
+
+  const separation = Math.max(collision.overlap, 0) + .15;
+
+  state.x += normalX * separation;
+  state.z += normalZ * separation;
+
+  const reboundSpeed = Math.min(
+    10,
+    Math.max(3.5, Math.abs(state.speed) * .55)
+  );
+
+  state.speed = -reboundSpeed;
+
+  bike.group.position.set(state.x, 0, state.z);
 }
 
 function animate() {
@@ -88,14 +192,18 @@ function animate() {
     );
   }
 
-  updateTrafficCar(dt);
-
   updateTrafficTrain(dt);
+
+  track.updateRailwaySignals(
+    updateTrafficTrain.getSignalState()
+  );
+
+  updateTrafficCar(dt);
 
   const trafficCollision = checkTrafficCollisions();
 
   if (trafficCollision) {
-    state.speed = 0;
+    resolveTrafficCollision(trafficCollision);
   }
 
   const currentViolation =
@@ -110,6 +218,10 @@ function animate() {
     currentViolation &&
     currentViolation !== previousViolation
   ) {
+    if (!state.lawHistory.includes(currentViolation)) {
+      state.lawHistory.push(currentViolation);
+    }
+
     state.collisionAlert = currentViolation;
     state.alertUntil = performance.now() + 10000;
 

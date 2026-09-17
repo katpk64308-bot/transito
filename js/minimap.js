@@ -1,7 +1,7 @@
 import { finalPts, finishPoint, outerPts, shortcutPts, startPts, trainPts } from './config.js';
 import { state } from './state.js';
 
-export function createMinimap(samples) {
+export function createMinimap(samples, getTrainState) {
   const canvas = document.getElementById('minimap');
   const context = canvas.getContext('2d');
   const dpr = Math.min(devicePixelRatio, 1.5);
@@ -55,9 +55,31 @@ export function createMinimap(samples) {
     context.clearRect(0, 0, 190, 190);
     context.drawImage(staticMap, 0, 0, 190, 190);
 
+    const trainState = getTrainState();
+    const [trainX, trainY] = project(trainState.x, trainState.z);
+    context.save();
+    context.translate(trainX, trainY);
+    context.rotate(Math.PI - trainState.heading);
+    context.fillStyle = '#43b5ff';
+    context.beginPath();
+    context.moveTo(0, -6);
+    context.lineTo(4, 5);
+    context.lineTo(-4, 5);
+    context.closePath();
+    context.fill();
+    context.restore();
+
     const [x, y] = project(state.x, state.z);
-    context.save(); context.translate(x, y); context.rotate(state.heading);
-    context.fillStyle = '#ff4d4d'; context.beginPath(); context.moveTo(0, -6); context.lineTo(4, 5); context.lineTo(-4, 5); context.closePath(); context.fill();
+    context.save();
+    context.translate(x, y);
+    context.rotate(Math.PI - state.heading);
+    context.fillStyle = '#ff4d4d';
+    context.beginPath();
+    context.moveTo(0, -6);
+    context.lineTo(4, 5);
+    context.lineTo(-4, 5);
+    context.closePath();
+    context.fill();
     context.restore();
   };
 }
