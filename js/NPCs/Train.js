@@ -1,88 +1,868 @@
-function createFallbackTrain() {
-  const train = new THREE.Group();
+const THREE = window.THREE;
+
+/* =========================================================
+   CONFIGURAÇÃO DOS MODELOS 3D
+========================================================= */
+
+// Ajuste esta pasta para o local onde você colocou os .glb
+// extraídos do Modular_Train_Pack-glb.zip. Os nomes de arquivo
+// abaixo são EXATAMENTE os nomes originais do pacote (com espaços).
+const TRAIN_MODEL_PATH =
+  'modelo/Train/Locomotive Front by Quaternius - WY84FHug9s.glb';
+
+const WAGON_MODEL_PATH =
+  'modelo/Train/Locomotive Wagon.glb';
+
+
+/* =========================================================
+   CONFIGURAÇÃO DO TREM
+========================================================= */
+
+// Comprimento da locomotiva
+const TRAIN_MODEL_LENGTH = 15;
+
+// Largura da locomotiva
+const TRAIN_MODEL_WIDTH = 3.6;
+
+// Altura da locomotiva
+const TRAIN_MODEL_HEIGHT = 5;
+
+
+// Comprimento dos vagões
+const WAGON_MODEL_LENGTH = 15;
+
+// Largura dos vagões
+const WAGON_MODEL_WIDTH = 3.6;
+
+// Altura dos vagões
+const WAGON_MODEL_HEIGHT = 5;
+
+
+/*
+   VÃO LIVRE ENTRE OS VEÍCULOS.
+
+   Este valor representa o espaço REAL entre:
+   - locomotiva e primeiro vagão
+   - primeiro vagão e segundo vagão
+   - segundo vagão e terceiro vagão
+   - etc.
+
+   Aumente este valor para separar mais.
+*/
+const WAGON_COUPLING_GAP = 0.2;
+
+
+/*
+   ESCALA UNIFORME.
+
+   true  = mantém a proporção original do modelo
+           (usa apenas o comprimento como referência,
+           largura/altura são calculadas automaticamente).
+           Evita que o modelo fique esmagado/deformado.
+
+   false = força largura e altura exatas definidas acima
+           (pode distorcer modelos com proporções diferentes
+           das do modelo original usado para calibrar esses
+           números).
+*/
+const UNIFORM_SCALE_MODELS = true;
+
+
+// Quantidade de vagões
+const WAGON_COUNT = 14;
+
+
+/* =========================================================
+   ROTAÇÃO DOS MODELOS
+========================================================= */
+
+const TRAIN_MODEL_ROTATION_OFFSET = Math.PI / 2;
+
+const WAGON_MODEL_ROTATION_OFFSET = Math.PI / 2;
+
+
+/* =========================================================
+   OBJETO ESPECÍFICO DO VAGÃO
+========================================================= */
+
+/*
+   null = utiliza o modelo inteiro.
+*/
+const WAGON_MODEL_NODE_NAME = null;
+
+
+/* =========================================================
+   COR DOS VAGÕES
+========================================================= */
+
+/*
+   false = mantém as cores originais do GLB.
+   true  = aplica WAGON_TINT_COLOR.
+*/
+
+const USE_WAGON_TINT = false;
+
+const WAGON_TINT_COLOR = 0x9e2525;
+
+
+/* =========================================================
+   CONFIGURAÇÃO DOS MATERIAIS
+========================================================= */
+
+/*
+   Brilho da locomotiva.
+*/
+const TRAIN_BRIGHTNESS = 1.0;
+
+
+/*
+   Pequeno aumento no brilho dos vagões.
+
+   1.0 = original
+   1.15 = ligeiramente mais claro
+   1.3 = mais claro
+*/
+const WAGON_BRIGHTNESS = 1.15;
+
+
+/*
+   Limita o metalness.
+
+   Materiais com metalness muito alto podem
+   ficar quase pretos quando não existe
+   environment map/HDRI na cena.
+*/
+const MAX_METALNESS = 0.25;
+
+
+/*
+   Evita roughness muito baixa.
+*/
+const MIN_ROUGHNESS = 0.55;
+
+
+/*
+   Os vagões não recebem sombras.
+
+   Isso evita que 14 vagões em sequência
+   fiquem excessivamente escuros.
+*/
+const WAGON_RECEIVE_SHADOW = false;
+
+
+/* =========================================================
+   CACHE DOS MODELOS
+========================================================= */
+
+let trainModelCache = null;
+
+let wagonModelCache = null;
+
+
+/* =========================================================
+   CLONAR MODELO
+========================================================= */
+
+function cloneModel(model) {
+
+  const clone =
+    model.clone(true);
+
+  clone.traverse(object => {
+
+    if (!object.isMesh) {
+      return;
+    }
+
+    object.castShadow = true;
+
+    object.receiveShadow = true;
+
+
+    if (!object.material) {
+      return;
+    }
+
+
+    const materials =
+      Array.isArray(object.material)
+        ? object.material
+        : [object.material];
+
+
+    /*
+       Clona os materiais.
+
+       Isso é importante porque existem
+       vários vagões independentes.
+    */
+
+    const clonedMaterials =
+      materials.map(material => {
+
+        if (!material) {
+          return material;
+        }
+
+        const newMaterial =
+          material.clone();
+
+        newMaterial.side =
+          THREE.DoubleSide;
+
+        newMaterial.needsUpdate =
+          true;
+
+        return newMaterial;
+      });
+
+
+    object.material =
+      clonedMaterials.length === 1
+        ? clonedMaterials[0]
+        : clonedMaterials;
+
+  });
+
+
+  return clone;
+}
+
+
+/* =========================================================
+   APLICAR COR
+========================================================= */
+
+function applyModelTint(
+  model,
+  color
+) {
+
+  model.traverse(object => {
+
+    if (
+      !object.isMesh ||
+      !object.material
+    ) {
+      return;
+    }
+
+
+    const materials =
+      Array.isArray(object.material)
+        ? object.material
+        : [object.material];
+
+
+    materials.forEach(material => {
+
+      if (
+        !material ||
+        !material.color
+      ) {
+        return;
+      }
+
+
+      material.color.setHex(
+        color
+      );
+
+      material.needsUpdate =
+        true;
+
+    });
+
+  });
+}
+
+
+/* =========================================================
+   NORMALIZAR MATERIAIS
+========================================================= */
+
+function normalizeMaterials(
+  model,
+  options = {}
+) {
+
+  const brightness =
+    options.brightness ?? 1;
+
+
+  const receiveShadow =
+    options.receiveShadow ?? true;
+
+
+  model.traverse(object => {
+
+
+    /* =====================================================
+       DESATIVAR LUZES DO GLB
+    ===================================================== */
+
+    if (object.isLight) {
+
+      object.visible = false;
+
+      object.intensity = 0;
+
+      return;
+    }
+
+
+    if (
+      !object.isMesh ||
+      !object.material
+    ) {
+      return;
+    }
+
+
+    /* =====================================================
+       SOMBRAS
+    ===================================================== */
+
+    object.castShadow = true;
+
+    object.receiveShadow =
+      receiveShadow;
+
+
+    /* =====================================================
+       MATERIAIS
+    ===================================================== */
+
+    const materials =
+      Array.isArray(object.material)
+        ? object.material
+        : [object.material];
+
+
+    materials.forEach(material => {
+
+      if (!material) {
+        return;
+      }
+
+
+      /*
+         Permite visualizar corretamente
+         as faces do modelo.
+      */
+
+      material.side =
+        THREE.DoubleSide;
+
+
+      /* ===================================================
+         METALNESS
+      =================================================== */
+
+      if (
+        material.metalness !== undefined
+      ) {
+
+        material.metalness =
+          Math.min(
+            material.metalness,
+            MAX_METALNESS
+          );
+      }
+
+
+      /* ===================================================
+         ROUGHNESS
+      =================================================== */
+
+      if (
+        material.roughness !== undefined
+      ) {
+
+        material.roughness =
+          Math.max(
+            material.roughness,
+            MIN_ROUGHNESS
+          );
+      }
+
+
+      /* ===================================================
+         ENVIRONMENT MAP
+      =================================================== */
+
+      if (
+        material.envMapIntensity !== undefined
+      ) {
+
+        material.envMapIntensity =
+          1;
+      }
+
+
+      /* ===================================================
+         EMISSIVE
+      =================================================== */
+
+      /*
+         Não apagamos o emissive original.
+
+         Apenas diminuímos valores exagerados.
+      */
+
+      if (
+        material.emissiveIntensity !==
+        undefined
+      ) {
+
+        if (
+          material.emissiveIntensity >
+          1.5
+        ) {
+
+          material.emissiveIntensity =
+            1;
+        }
+      }
+
+
+      /* ===================================================
+         BRILHO DA COR BASE
+      =================================================== */
+
+      if (
+        material.color &&
+        brightness !== 1
+      ) {
+
+        material.color.multiplyScalar(
+          brightness
+        );
+
+
+        /*
+           Impede que RGB passe de 1.
+        */
+
+        material.color.r =
+          Math.min(
+            material.color.r,
+            1
+          );
+
+        material.color.g =
+          Math.min(
+            material.color.g,
+            1
+          );
+
+        material.color.b =
+          Math.min(
+            material.color.b,
+            1
+          );
+      }
+
+
+      material.needsUpdate =
+        true;
+
+    });
+
+  });
+}
+
+
+/* =========================================================
+   PREPARAR MODELO 3D
+========================================================= */
+
+function prepareModel(
+  model,
+  targetLength,
+  targetWidth = null,
+  targetHeight = null,
+  rotationOffset = 0,
+  materialOptions = {}
+) {
+
+  const pivot =
+    new THREE.Group();
+
+
+  /* =====================================================
+     LIMPAR TRANSFORMAÇÕES ORIGINAIS
+  ===================================================== */
+
+  model.rotation.set(
+    0,
+    rotationOffset,
+    0
+  );
+
+
+  model.scale.set(
+    1,
+    1,
+    1
+  );
+
+
+  model.position.set(
+    0,
+    0,
+    0
+  );
+
+
+  model.updateMatrixWorld(
+    true
+  );
+
+
+  /* =====================================================
+     MEDIR MODELO ORIGINAL
+  ===================================================== */
+
+  const originalBox =
+    new THREE.Box3()
+      .setFromObject(model);
+
+
+  const originalSize =
+    originalBox.getSize(
+      new THREE.Vector3()
+    );
+
+
+  /* =====================================================
+     ESCALA INDEPENDENTE
+  ===================================================== */
+
+  const scaleZ =
+    targetLength /
+    (originalSize.z || 1);
+
+
+  const scaleX =
+    targetWidth
+      ? targetWidth /
+        (originalSize.x || 1)
+      : scaleZ;
+
+
+  const scaleY =
+    targetHeight
+      ? targetHeight /
+        (originalSize.y || 1)
+      : scaleZ;
+
+
+  model.scale.set(
+    scaleX,
+    scaleY,
+    scaleZ
+  );
+
+
+  model.updateMatrixWorld(
+    true
+  );
+
+
+  /* =====================================================
+     MEDIR DEPOIS DA ESCALA
+  ===================================================== */
+
+  const finalBox =
+    new THREE.Box3()
+      .setFromObject(model);
+
+
+  const center =
+    finalBox.getCenter(
+      new THREE.Vector3()
+    );
+
+
+  /* =====================================================
+     CENTRALIZAR X E Z
+  ===================================================== */
+
+  model.position.x -=
+    center.x;
+
+
+  model.position.z -=
+    center.z;
+
+
+  /* =====================================================
+     COLOCAR NO CHÃO
+  ===================================================== */
+
+  model.position.y -=
+    finalBox.min.y;
+
+
+  /* =====================================================
+     NORMALIZAR MATERIAIS
+  ===================================================== */
+
+  normalizeMaterials(
+    model,
+    materialOptions
+  );
+
+
+  /* =====================================================
+     COLOCAR MODELO NO PIVÔ
+  ===================================================== */
+
+  pivot.add(model);
+
+
+  return pivot;
+}
+
+
+/* =========================================================
+   PEGAR OBJETO ESPECÍFICO DO MODELO
+========================================================= */
+
+function extractNode(
+  model,
+  nodeName
+) {
+
+  if (!nodeName) {
+    return model;
+  }
+
+
+  const node =
+    model.getObjectByName(
+      nodeName
+    );
+
+
+  if (!node) {
+
+    console.warn(
+      `Objeto "${nodeName}" não encontrado. ` +
+      `Usando o modelo inteiro.`
+    );
+
+
+    return model;
+  }
+
+
+  return node;
+}
+
+
+/* =========================================================
+   CARREGAR GLB / GLTF
+========================================================= */
+
+function loadModel(path) {
+
+  return new Promise(resolve => {
+
+
+    /* =====================================================
+       VERIFICAR GLTFLoader
+    ===================================================== */
+
+    if (!THREE.GLTFLoader) {
+
+      console.error(
+        'GLTFLoader não encontrado. ' +
+        'Verifique se o script do GLTFLoader ' +
+        'foi carregado antes deste arquivo.'
+      );
+
+
+      resolve(null);
+
+      return;
+    }
+
+
+    const loader =
+      new THREE.GLTFLoader();
+
+
+    /*
+       Nomes de arquivo com espaços (ex: "Cargo Train Front.glb")
+       precisam ser codificados na URL, senão o carregamento
+       pode falhar silenciosamente em alguns navegadores/servidores.
+    */
+
+    const encodedPath =
+      encodeURI(path);
+
+
+    /* =====================================================
+       CARREGAR
+    ===================================================== */
+
+    loader.load(
+
+      encodedPath,
+
+
+      /* ===================================================
+         SUCESSO
+      =================================================== */
+
+      gltf => {
+
+        console.log(
+          `Modelo carregado: ${path}`
+        );
+
+
+        resolve(
+          gltf.scene
+        );
+      },
+
+
+      /* ===================================================
+         PROGRESSO
+      =================================================== */
+
+      undefined,
+
+
+      /* ===================================================
+         ERRO
+      =================================================== */
+
+      error => {
+
+        console.error(
+          `Erro ao carregar modelo: ${path} ` +
+          `(URL usada: ${encodedPath})`,
+          error
+        );
+
+
+        resolve(null);
+      }
+
+    );
+
+  });
+}
+
+
+/* =========================================================
+   FALLBACK DA LOCOMOTIVA
+========================================================= */
+
+function createFallbackLocomotive() {
+
+  const locomotive =
+    new THREE.Group();
+
 
   const redMaterial =
     new THREE.MeshLambertMaterial({
       color: 0x9e2525
     });
 
-  const redLightMaterial =
-    new THREE.MeshLambertMaterial({
-      color: 0xc63b32
-    });
 
   const darkMaterial =
     new THREE.MeshLambertMaterial({
       color: 0x202329
     });
 
-  const windowMaterial =
-    new THREE.MeshLambertMaterial({
-      color: 0x81c9dc
-    });
 
   const metalMaterial =
     new THREE.MeshLambertMaterial({
       color: 0x777b82
     });
 
-  const wheelGeometry =
-    new THREE.CylinderGeometry(
-      .68,
-      .68,
-      .38,
-      16
+
+  /* =====================================================
+     CORPO
+  ===================================================== */
+
+  const body =
+    new THREE.Mesh(
+
+      new THREE.BoxGeometry(
+        5.6,
+        2.8,
+        6.1
+      ),
+
+      redMaterial
     );
 
-  function addWheelPair(car, z) {
-    for (const x of [-1.8, 1.8]) {
-      const wheel = new THREE.Mesh(
-        wheelGeometry,
-        darkMaterial
-      );
 
-      wheel.rotation.z = Math.PI / 2;
-      wheel.position.set(x, .98, z);
-      wheel.castShadow = true;
+  body.position.y =
+    2.15;
 
-      car.add(wheel);
-    }
-  }
 
-  const locomotive = new THREE.Group();
+  body.castShadow =
+    true;
 
-  const boiler = new THREE.Mesh(
-    new THREE.BoxGeometry(5.6, 2.8, 6.1),
-    redMaterial
-  );
 
-  boiler.position.y = 2.15;
-  boiler.castShadow = true;
-  locomotive.add(boiler);
+  locomotive.add(body);
 
-  const cabin = new THREE.Mesh(
-    new THREE.BoxGeometry(6.4, 4.2, 2.5),
-    darkMaterial
-  );
+
+  /* =====================================================
+     CABINE
+  ===================================================== */
+
+  const cabin =
+    new THREE.Mesh(
+
+      new THREE.BoxGeometry(
+        6.4,
+        4.2,
+        2.5
+      ),
+
+      darkMaterial
+    );
+
 
   cabin.position.set(
     0,
-    3.0,
+    3,
     -1.75
   );
 
-  cabin.castShadow = true;
+
+  cabin.castShadow =
+    true;
+
+
   locomotive.add(cabin);
 
-  const chimney = new THREE.Mesh(
-    new THREE.CylinderGeometry(
-      .68,
-      .84,
-      2.8,
-      12
-    ),
-    metalMaterial
-  );
+
+  /* =====================================================
+     CHAMINÉ
+  ===================================================== */
+
+  const chimney =
+    new THREE.Mesh(
+
+      new THREE.CylinderGeometry(
+        0.68,
+        0.84,
+        2.8,
+        12
+      ),
+
+      metalMaterial
+    );
+
 
   chimney.position.set(
     0,
@@ -90,480 +870,964 @@ function createFallbackTrain() {
     1.55
   );
 
-  chimney.castShadow = true;
+
+  chimney.castShadow =
+    true;
+
+
   locomotive.add(chimney);
 
-  addWheelPair(locomotive, -1.35);
-  addWheelPair(locomotive, 1.35);
 
-  locomotive.userData.distanceBehind = 0;
+  return locomotive;
+}
 
-  train.add(locomotive);
 
-  for (
-    let wagonIndex = 0;
-    wagonIndex < 14;
-    wagonIndex++
-  ) {
-    const z =
-      -7.8 -
-      wagonIndex * 7.8;
+/* =========================================================
+   FALLBACK DOS VAGÕES
+========================================================= */
 
-    const wagonMaterial =
-      wagonIndex % 2 === 0
-        ? redMaterial
-        : redLightMaterial;
+function createFallbackWagon() {
 
-    const wagon = new THREE.Group();
+  const wagon =
+    new THREE.Group();
 
-    const chassis = new THREE.Mesh(
-      new THREE.BoxGeometry(
-        6.2,
-        .5,
-        5.3
-      ),
-      darkMaterial
-    );
 
-    chassis.position.y = .68;
-    chassis.castShadow = true;
-    wagon.add(chassis);
+  const bodyMaterial =
+    new THREE.MeshLambertMaterial({
+      color: 0x9e2525
+    });
 
-    const body = new THREE.Mesh(
+
+  const darkMaterial =
+    new THREE.MeshLambertMaterial({
+      color: 0x202329
+    });
+
+
+  const windowMaterial =
+    new THREE.MeshLambertMaterial({
+      color: 0x81c9dc
+    });
+
+
+  /* =====================================================
+     CORPO
+  ===================================================== */
+
+  const body =
+    new THREE.Mesh(
+
       new THREE.BoxGeometry(
         6.8,
         3.4,
         5.35
       ),
-      wagonMaterial
+
+      bodyMaterial
     );
 
-    body.position.y = 2.35;
-    body.castShadow = true;
-    wagon.add(body);
 
-    const roof = new THREE.Mesh(
+  body.position.y =
+    2.35;
+
+
+  body.castShadow =
+    true;
+
+
+  wagon.add(body);
+
+
+  /* =====================================================
+     TETO
+  ===================================================== */
+
+  const roof =
+    new THREE.Mesh(
+
       new THREE.BoxGeometry(
         7.1,
-        .36,
+        0.36,
         5.65
       ),
+
       darkMaterial
     );
 
-    roof.position.y = 4.15;
-    roof.castShadow = true;
-    wagon.add(roof);
 
-    for (const x of [-3.43, 3.43]) {
-      for (
-        const zWindow of [-1.55, 0, 1.55]
-      ) {
-        const window = new THREE.Mesh(
+  roof.position.y =
+    4.15;
+
+
+  roof.castShadow =
+    true;
+
+
+  wagon.add(roof);
+
+
+  /* =====================================================
+     JANELAS
+  ===================================================== */
+
+  for (
+    const x of [-3.43, 3.43]
+  ) {
+
+    for (
+      const z of [-1.55, 0, 1.55]
+    ) {
+
+      const window =
+        new THREE.Mesh(
+
           new THREE.BoxGeometry(
-            .08,
+            0.08,
             1.12,
-            .92
+            0.92
           ),
+
           windowMaterial
         );
 
-        window.position.set(
-          x,
-          2.65,
-          zWindow
-        );
 
-        window.castShadow = true;
-        wagon.add(window);
-      }
+      window.position.set(
+        x,
+        2.65,
+        z
+      );
+
+
+      window.castShadow =
+        true;
+
+
+      wagon.add(window);
     }
+  }
 
-    addWheelPair(wagon, -1.45);
-    addWheelPair(wagon, 1.45);
 
-    const coupler = new THREE.Mesh(
-      new THREE.BoxGeometry(
-        .5,
-        .28,
-        .55
-      ),
-      metalMaterial
-    );
+  return wagon;
+}
 
-    coupler.position.set(
-      0,
-      .75,
-      2.95
-    );
 
-    coupler.castShadow = true;
-    wagon.add(coupler);
+/* =========================================================
+   CRIAR TREM
+========================================================= */
 
-    wagon.position.z = z;
-    wagon.userData.distanceBehind = -z;
+function createTrain() {
+
+  const train =
+    new THREE.Group();
+
+
+  train.userData.parts =
+    [];
+
+
+  /* =======================================================
+     LOCOMOTIVA FALLBACK
+  ======================================================= */
+
+  const locomotive =
+    createFallbackLocomotive();
+
+
+  train.userData.parts.push({
+
+    model: locomotive,
+
+    distanceBehind: 0
+
+  });
+
+
+  train.add(
+    locomotive
+  );
+
+
+  /* =======================================================
+     VAGÕES FALLBACK
+  ======================================================= */
+
+  /*
+     A distância é calculada utilizando:
+
+     metade do veículo anterior
+     +
+     vão livre
+     +
+     metade do veículo atual
+
+     Dessa forma o vão é exatamente
+     WAGON_COUPLING_GAP.
+  */
+
+  let cumulativeDistance =
+    0;
+
+
+  let previousHalfLength =
+    TRAIN_MODEL_LENGTH / 2;
+
+
+  for (
+    let i = 0;
+    i < WAGON_COUNT;
+    i++
+  ) {
+
+    const wagon =
+      createFallbackWagon();
+
+
+    const wagonHalfLength =
+      WAGON_MODEL_LENGTH / 2;
+
+
+    cumulativeDistance +=
+      previousHalfLength +
+      WAGON_COUPLING_GAP +
+      wagonHalfLength;
+
+
+    previousHalfLength =
+      wagonHalfLength;
+
+
+    train.userData.parts.push({
+
+      model: wagon,
+
+      distanceBehind:
+        cumulativeDistance
+
+    });
+
 
     train.add(wagon);
   }
 
-  return train;
-}
 
-function createLegacyTrain() {
-  const train = new THREE.Group();
+  /* =======================================================
+     CARREGAR LOCOMOTIVA REAL
+  ======================================================= */
 
-  new THREE.FBXLoader().load(
-    'modelo/trem.fbx',
-    model => {
-      const initialBox =
-        new THREE.Box3().setFromObject(model);
+  loadModel(
+    TRAIN_MODEL_PATH
+  ).then(model => {
 
-      const initialSize =
-        initialBox.getSize(
-          new THREE.Vector3()
-        );
 
-      const horizontalSize =
-        Math.max(
-          initialSize.x,
-          initialSize.z
-        ) || 1;
+    if (!model) {
 
-      model.scale.setScalar(
-        22 / horizontalSize
+      console.warn(
+        'Locomotiva GLB não carregada. ' +
+        'Usando fallback.'
       );
 
-      if (
-        initialSize.x >
-        initialSize.z
-      ) {
-        model.rotation.y =
-          Math.PI / 2;
-      }
 
-      const box =
-        new THREE.Box3().setFromObject(model);
-
-      const center =
-        box.getCenter(
-          new THREE.Vector3()
-        );
-
-      model.position.x -= center.x;
-      model.position.y -= box.min.y;
-      model.position.z -= center.z;
-
-      model.traverse(object => {
-        if (object.isLight) {
-          object.visible = false;
-          object.intensity = 0;
-          return;
-        }
-
-        if (!object.isMesh) return;
-
-        object.castShadow = true;
-        object.receiveShadow = true;
-
-        const materials =
-          Array.isArray(object.material)
-            ? object.material
-            : [object.material];
-
-        materials.forEach(material => {
-          if (!material) return;
-
-          material.side =
-            THREE.DoubleSide;
-
-          if (material.emissive) {
-            material.emissive.set(
-              0x000000
-            );
-
-            material.emissiveIntensity = 0;
-          }
-
-          material.needsUpdate = true;
-        });
-      });
-
-      train.add(model);
-    },
-    undefined,
-    error => {
-      console.error(
-        'Não foi possível carregar o modelo modelo/trem.fbx:',
-        error
-      );
-
-      train.add(
-        createFallbackTrain()
-      );
-    }
-  );
-
-  return train;
-}
-
-function prepareTrainModel(
-  model,
-  targetLength
-) {
-  const initialBox =
-    new THREE.Box3().setFromObject(model);
-
-  const initialSize =
-    initialBox.getSize(
-      new THREE.Vector3()
-    );
-
-  const horizontalSize =
-    Math.max(
-      initialSize.x,
-      initialSize.z
-    ) || 1;
-
-  model.scale.setScalar(
-    targetLength / horizontalSize
-  );
-
-  if (
-    initialSize.x >
-    initialSize.z
-  ) {
-    model.rotation.y =
-      Math.PI / 2;
-  }
-
-  const box =
-    new THREE.Box3().setFromObject(model);
-
-  const center =
-    box.getCenter(
-      new THREE.Vector3()
-    );
-
-  model.position.x -= center.x;
-  model.position.y -= box.min.y;
-  model.position.z -= center.z;
-
-  model.traverse(object => {
-    if (object.isLight) {
-      object.visible = false;
-      object.intensity = 0;
       return;
     }
 
-    if (!object.isMesh) return;
 
-    object.castShadow = true;
-    object.receiveShadow = true;
+    trainModelCache =
+      model;
 
-    const materials =
-      Array.isArray(object.material)
-        ? object.material
-        : [object.material];
 
-    materials.forEach(material => {
-      if (!material) return;
+    const oldLocomotive =
+      train.userData.parts[0].model;
 
-      material.side =
-        THREE.DoubleSide;
 
-      if (material.emissive) {
-        material.emissive.set(
-          0x000000
-        );
+    /* =====================================================
+       PREPARAR LOCOMOTIVA REAL
+    ===================================================== */
 
-        material.emissiveIntensity = 0;
-      }
+    const realLocomotive =
+      prepareModel(
 
-      material.needsUpdate = true;
-    });
+        cloneModel(
+          trainModelCache
+        ),
+
+        TRAIN_MODEL_LENGTH,
+
+        UNIFORM_SCALE_MODELS
+          ? null
+          : TRAIN_MODEL_WIDTH,
+
+        UNIFORM_SCALE_MODELS
+          ? null
+          : TRAIN_MODEL_HEIGHT,
+
+        TRAIN_MODEL_ROTATION_OFFSET,
+
+        {
+          brightness:
+            TRAIN_BRIGHTNESS,
+
+          receiveShadow:
+            true
+        }
+      );
+
+
+    /* =====================================================
+       MANTER POSIÇÃO
+    ===================================================== */
+
+    realLocomotive.position.copy(
+      oldLocomotive.position
+    );
+
+
+    realLocomotive.rotation.y =
+      oldLocomotive.rotation.y;
+
+
+    /* =====================================================
+       REMOVER FALLBACK
+    ===================================================== */
+
+    train.remove(
+      oldLocomotive
+    );
+
+
+    /* =====================================================
+       ADICIONAR MODELO REAL
+    ===================================================== */
+
+    train.add(
+      realLocomotive
+    );
+
+
+    /* =====================================================
+       ATUALIZAR REFERÊNCIA
+    ===================================================== */
+
+    train.userData.parts[0].model =
+      realLocomotive;
+
+
+    console.log(
+      'Locomotiva 3D substituída com sucesso.'
+    );
+
   });
 
-  return model;
-}
 
-function createTrain() {
-  const train = new THREE.Group();
+  /* =======================================================
+     CARREGAR VAGÕES REAIS
+  ======================================================= */
 
-  train.userData.parts = [];
+  loadModel(
+    WAGON_MODEL_PATH
+  ).then(model => {
 
-  const model =
-    createFallbackTrain();
 
-  model.children
-    .slice()
-    .forEach(part => {
-      const distanceBehind =
-        part.userData.distanceBehind || 0;
+    if (!model) {
 
-      part.position.set(0, 0, 0);
+      console.warn(
+        'Vagão GLB não carregado. ' +
+        'Usando fallback.'
+      );
 
-      part.userData.distanceBehind =
-        distanceBehind;
 
-      train.userData.parts.push({
-        model: part,
-        distanceBehind
-      });
+      return;
+    }
 
-      train.add(part);
-    });
+
+    wagonModelCache =
+      model;
+
+
+    /* =====================================================
+       SUBSTITUIR TODOS OS VAGÕES
+    ===================================================== */
+
+    for (
+      let i = 1;
+      i < train.userData.parts.length;
+      i++
+    ) {
+
+      const part =
+        train.userData.parts[i];
+
+
+      const oldWagon =
+        part.model;
+
+
+      /* ===================================================
+         CLONAR MODELO
+      =================================================== */
+
+      const clonedModel =
+        cloneModel(
+          wagonModelCache
+        );
+
+
+      /* ===================================================
+         PEGAR NODE
+      =================================================== */
+
+      const source =
+        extractNode(
+          clonedModel,
+          WAGON_MODEL_NODE_NAME
+        );
+
+
+      /* ===================================================
+         PREPARAR VAGÃO
+      =================================================== */
+
+      const realWagon =
+        prepareModel(
+
+          source,
+
+          WAGON_MODEL_LENGTH,
+
+          UNIFORM_SCALE_MODELS
+            ? null
+            : WAGON_MODEL_WIDTH,
+
+          UNIFORM_SCALE_MODELS
+            ? null
+            : WAGON_MODEL_HEIGHT,
+
+          WAGON_MODEL_ROTATION_OFFSET,
+
+          {
+            brightness:
+              WAGON_BRIGHTNESS,
+
+            receiveShadow:
+              WAGON_RECEIVE_SHADOW
+          }
+        );
+
+
+      /* ===================================================
+         COR OPCIONAL
+      =================================================== */
+
+      if (
+        USE_WAGON_TINT
+      ) {
+
+        applyModelTint(
+          realWagon,
+          WAGON_TINT_COLOR
+        );
+      }
+
+
+      /* ===================================================
+         MANTER POSIÇÃO
+      =================================================== */
+
+      realWagon.position.copy(
+        oldWagon.position
+      );
+
+
+      realWagon.rotation.y =
+        oldWagon.rotation.y;
+
+
+      /* ===================================================
+         REMOVER FALLBACK
+      =================================================== */
+
+      train.remove(
+        oldWagon
+      );
+
+
+      /* ===================================================
+         ADICIONAR MODELO REAL
+      =================================================== */
+
+      train.add(
+        realWagon
+      );
+
+
+      /* ===================================================
+         ATUALIZAR REFERÊNCIA
+      =================================================== */
+
+      part.model =
+        realWagon;
+    }
+
+
+    console.log(
+      `${WAGON_COUNT} vagões 3D carregados com sucesso.`
+    );
+
+  });
+
 
   return train;
 }
 
-function getLoopPoint(
-  route,
-  index
+
+/* =========================================================
+   ROTA COM DISTÂNCIA REAL ACUMULADA
+========================================================= */
+
+function buildRouteDistances(
+  points
 ) {
-  const last =
-    route.length - 1;
 
-  const baseIndex =
-    Math.floor(index) % last;
+  const count =
+    points.length;
 
-  const nextIndex =
-    (baseIndex + 1) % last;
+
+  /*
+     cumDist[i] =
+     distância acumulada até o ponto i.
+  */
+
+  const cumDist =
+    new Array(
+      count + 1
+    );
+
+
+  cumDist[0] =
+    0;
+
+
+  /* =====================================================
+     DISTÂNCIA DOS SEGMENTOS
+  ===================================================== */
+
+  for (
+    let i = 1;
+    i < count;
+    i++
+  ) {
+
+    cumDist[i] =
+      cumDist[i - 1] +
+      points[i - 1]
+        .distanceTo(
+          points[i]
+        );
+  }
+
+
+  /* =====================================================
+     FECHAR O LAÇO
+  ===================================================== */
+
+  cumDist[count] =
+    cumDist[count - 1] +
+    points[count - 1]
+      .distanceTo(
+        points[0]
+      );
+
+
+  return cumDist;
+}
+
+
+/* =========================================================
+   PEGAR PONTO PELA DISTÂNCIA
+========================================================= */
+
+function getPointAtDistance(
+  points,
+  cumDist,
+  distance
+) {
+
+  const totalLength =
+    cumDist[
+      cumDist.length - 1
+    ];
+
+
+  /* =====================================================
+     NORMALIZAR DISTÂNCIA
+  ===================================================== */
+
+  let d =
+    distance %
+    totalLength;
+
+
+  if (d < 0) {
+    d += totalLength;
+  }
+
+
+  /* =====================================================
+     BUSCA BINÁRIA
+  ===================================================== */
+
+  let lo = 0;
+
+  let hi =
+    cumDist.length - 1;
+
+
+  while (
+    lo < hi - 1
+  ) {
+
+    const mid =
+      (lo + hi) >> 1;
+
+
+    if (
+      cumDist[mid] <= d
+    ) {
+
+      lo = mid;
+
+    } else {
+
+      hi = mid;
+    }
+  }
+
+
+  /* =====================================================
+     SEGMENTO
+  ===================================================== */
+
+  const segStart =
+    cumDist[lo];
+
+
+  const segEnd =
+    cumDist[lo + 1];
+
+
+  const segLength =
+    (segEnd - segStart) ||
+    1;
+
 
   const blend =
-    index - Math.floor(index);
+    (d - segStart) /
+    segLength;
+
 
   const current =
-    route[baseIndex];
+    points[
+      lo % points.length
+    ];
+
 
   const next =
-    route[nextIndex];
+    points[
+      (lo + 1) %
+      points.length
+    ];
+
+
+  /* =====================================================
+     DIREÇÃO
+  ===================================================== */
 
   const tangentX =
-    next.x - current.x;
+    next.x -
+    current.x;
+
 
   const tangentZ =
-    next.z - current.z;
+    next.z -
+    current.z;
+
 
   return {
+
     x:
       current.x +
-      (next.x - current.x) *
-      blend,
+      tangentX * blend,
+
 
     z:
       current.z +
-      (next.z - current.z) *
-      blend,
+      tangentZ * blend,
+
 
     heading:
       Math.atan2(
         tangentX,
         tangentZ
       )
+
   };
 }
+
+
+/* =========================================================
+   TREM DE TRÂNSITO
+========================================================= */
 
 export function createTrafficTrain(
   scene,
   track
 ) {
-  const route =
+
+
+  /* =====================================================
+     PEGAR ROTA
+  ===================================================== */
+
+  const rawRoute =
     track.samples.train;
+
+
+  /* =====================================================
+     VERIFICAÇÃO
+  ===================================================== */
+
+  if (
+    !rawRoute ||
+    rawRoute.length < 2
+  ) {
+
+    console.error(
+      'A rota do trem não foi encontrada.'
+    );
+
+
+    return () => {};
+  }
+
+
+  /* =====================================================
+     REMOVER ÚLTIMO PONTO DUPLICADO
+  ===================================================== */
+
+  const routePoints =
+    rawRoute.slice(
+      0,
+      rawRoute.length - 1
+    );
+
+
+  /* =====================================================
+     CRIAR TREM
+  ===================================================== */
 
   const train =
     createTrain();
 
-  scene.add(train);
 
-  const routeLength =
-    route.length - 1;
+  scene.add(
+    train
+  );
 
-  let averageSegmentLength = 0;
 
-  for (
-    let i = 0;
-    i < routeLength;
-    i++
-  ) {
-    averageSegmentLength +=
-      route[i].distanceTo(
-        route[i + 1]
-      );
-  }
+  /* =====================================================
+     CALCULAR DISTÂNCIAS
+  ===================================================== */
 
-  averageSegmentLength /=
-    routeLength;
+  const cumDist =
+    buildRouteDistances(
+      routePoints
+    );
 
-  let index =
-    routeLength * .2;
 
-  const speed = 22;
+  const totalLength =
+    cumDist[
+      cumDist.length - 1
+    ];
+
+
+  /* =====================================================
+     POSIÇÃO INICIAL
+  ===================================================== */
+
+  let distanceTraveled =
+    totalLength * 0.2;
+
+
+  /* =====================================================
+     VELOCIDADE
+  ===================================================== */
+
+  const speed =
+    22;
+
+
+  /* =====================================================
+     ATUALIZAR TREM
+  ===================================================== */
 
   function update(dt) {
-    index =
+
+
+    /* ===================================================
+       AVANÇAR
+    =================================================== */
+
+    distanceTraveled =
       (
-        index +
-        speed * dt /
-        averageSegmentLength
-      ) % routeLength;
+        distanceTraveled +
+        speed * dt
+      ) %
+      totalLength;
+
+
+    /* ===================================================
+       ATUALIZAR CADA PARTE
+    =================================================== */
 
     train.userData.parts.forEach(
       part => {
-        const partIndex =
-          (
-            index -
-            part.distanceBehind /
-              averageSegmentLength +
-            routeLength
-          ) % routeLength;
+
+
+        /*
+           A locomotiva fica na posição
+           distanceTraveled.
+
+           Os vagões ficam atrás dela.
+        */
+
+        const partDistance =
+          distanceTraveled -
+          part.distanceBehind;
+
+
+        /* =================================================
+           PEGAR POSIÇÃO NA ROTA
+        ================================================= */
 
         const point =
-          getLoopPoint(
-            route,
-            partIndex
+          getPointAtDistance(
+
+            routePoints,
+
+            cumDist,
+
+            partDistance
           );
 
+
+        /* =================================================
+           POSICIONAR
+        ================================================= */
+
         part.model.position.set(
+
           point.x,
-          .02,
+
+          0.02,
+
           point.z
+
         );
+
+
+        /* =================================================
+           ROTACIONAR
+        ================================================= */
 
         part.model.rotation.y =
           point.heading;
+
       }
     );
   }
 
+
+  /* =====================================================
+     POSICIONAMENTO INICIAL
+  ===================================================== */
+
   update(0);
 
-  update.getHitboxes = () =>
-    train.userData.parts.map(
-      part => ({
-        type: 'train',
-        x: part.model.position.x,
-        z: part.model.position.z,
-        radius: 4.3
-      })
-    );
 
-  update.getSignalState = () => ({
-    index,
-    routeLength,
-    averageSegmentLength,
-    speed
-  });
+  /* =========================================================
+     HITBOXES
+  ========================================================= */
 
-  update.getMinimapState = () => {
-    const locomotive =
-      train.userData.parts[0].model;
+  update.getHitboxes =
+    () => {
 
-    return {
-      x: locomotive.position.x,
-      z: locomotive.position.z,
-      heading: locomotive.rotation.y
+      return train.userData.parts.map(
+        part => ({
+
+          type:
+            'train',
+
+          x:
+            part.model.position.x,
+
+          z:
+            part.model.position.z,
+
+          radius:
+            4.3
+
+        })
+      );
+
     };
-  };
+
+
+  /* =========================================================
+     ESTADO DO TREM
+  ========================================================= */
+
+  update.getSignalState =
+    () => ({
+
+      distanceTraveled,
+
+      totalLength,
+
+      speed
+
+    });
+
+
+  /* =========================================================
+     MINIMAPA
+  ========================================================= */
+
+  update.getMinimapState =
+    () => {
+
+
+      const locomotive =
+        train.userData.parts[0].model;
+
+
+      return {
+
+        x:
+          locomotive.position.x,
+
+        z:
+          locomotive.position.z,
+
+        heading:
+          locomotive.rotation.y
+
+      };
+
+    };
+
+
+  /* =====================================================
+     RETORNAR FUNÇÃO DE UPDATE
+  ===================================================== */
 
   return update;
 }
