@@ -1,14 +1,20 @@
 export function createScene() {
   const canvas = document.getElementById('three-canvas');
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: false, powerPreference: 'high-performance' });
-  renderer.setPixelRatio(Math.min(devicePixelRatio, 1.25));
+  // Limita a resolução interna: telas com alta densidade de pixels são uma
+  // das causas mais comuns de queda de FPS no WebGL.
+  renderer.setPixelRatio(Math.min(devicePixelRatio, 1));
   renderer.shadowMap.enabled = localStorage.getItem('shadowsEnabled') !== 'false';
-  renderer.shadowMap.type = THREE.PCFShadowMap;
+  // Sombras simples preservam a leitura do cenário com bem menos custo que
+  // o filtro PCF, especialmente em computadores integrados.
+  renderer.shadowMap.type = THREE.BasicShadowMap;
 
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(0x8fc7e8);
-  scene.fog = new THREE.Fog(0x8fc7e8, 140, 420);
-  const camera = new THREE.PerspectiveCamera(62, innerWidth / innerHeight, .1, 1000);
+  // A névoa combina com o céu; o limite da câmera logo depois dela também
+  // evita desenhar objetos que já não precisam aparecer.
+  scene.fog = new THREE.Fog(0x8fc7e8, 75, 260);
+  const camera = new THREE.PerspectiveCamera(62, innerWidth / innerHeight, .1, 320);
 
   function resize() {
     renderer.setSize(innerWidth, innerHeight);

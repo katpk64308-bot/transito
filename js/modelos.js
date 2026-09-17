@@ -47,6 +47,49 @@ const MODEL_CONFIG = {
   }
 };
 
+function createSidewalkStreetlights(trackSamples) {
+  if (!trackSamples) return null;
+
+  const roads = [
+    { samples: trackSamples.start, width: 27, step: 18 },
+    { samples: trackSamples.outer, width: 25, step: 22 },
+    { samples: trackSamples.final, width: 27, step: 24 }
+  ];
+
+  const instances = [];
+  let side = 1;
+
+  roads.forEach(({ samples, width, step }) => {
+    // A calçada começa após a pista e o meio dela fica a 16 unidades da
+    // linha central. Deixar uma margem nas pontas evita cruzamentos.
+    const sidewalkCenter = width / 2 + .55 + Math.min(width * .25, 4.5) / 2;
+
+    for (let index = step; index < samples.length - step; index += step) {
+      const previous = samples[index - 1];
+      const next = samples[index + 1];
+      const point = samples[index];
+      const tangentX = next.x - previous.x;
+      const tangentZ = next.z - previous.z;
+      const length = Math.hypot(tangentX, tangentZ) || 1;
+      const normalX = -tangentZ / length;
+      const normalZ = tangentX / length;
+
+      instances.push({
+        position: {
+          x: point.x + normalX * sidewalkCenter * side,
+          y: 0,
+          z: point.z + normalZ * sidewalkCenter * side
+        },
+        rotation: { x: 0, y: Math.atan2(tangentX, tangentZ), z: 0 }
+      });
+
+      side *= -1;
+    }
+  });
+
+  return instances;
+}
+
 function configureModel(model, config) {
   model.position.set(config.position.x, config.position.y, config.position.z);
   model.scale.set(config.scale.x, config.scale.y, config.scale.z);
@@ -68,7 +111,9 @@ function configureModel(model, config) {
     const materials = Array.isArray(object.material) ? object.material : [object.material];
     materials.forEach(material => {
       if (!material) return;
-      material.side = THREE.DoubleSide;
+      // Renderizar as duas faces dobra o trabalho de fragmentos. Os modelos
+      // do cenário são fechados, portanto a face frontal é suficiente.
+      material.side = THREE.FrontSide;
       material.needsUpdate = true;
     });
   });
@@ -108,7 +153,7 @@ function loadModel(config, onLoad, onError) {
   onError(new Error(`Formato de modelo não suportado: .${extension}`));
 }
 
-export function createModels(scene) {
+export function createModels(scene, trackSamples = null) {
   const colliders = [];
 
   Object.entries(MODEL_CONFIG).forEach(([name, config]) => {
@@ -132,7 +177,11 @@ export function createModels(scene) {
     loadModel(
       config,
       model => {
-        const instances = config.instances || [{ position: config.position, rotation: config.rotation }];
+        const sidewalkStreetlights =
+          name === 'poste1'
+            ? createSidewalkStreetlights(trackSamples)
+            : null;
+        const instances = sidewalkStreetlights || config.instances || [{ position: config.position, rotation: config.rotation }];
         instances.forEach((instance, index) => {
           const instanceConfig = {
             ...config,

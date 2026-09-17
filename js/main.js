@@ -17,7 +17,7 @@ const { renderer, scene, camera } = createScene();
 
 const track = createTrack(scene);
 
-const models = createModels(scene);
+const models = createModels(scene, track.samples);
 
 const updateTrafficTrain = createTrafficTrain(scene, track);
 
