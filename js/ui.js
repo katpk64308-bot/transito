@@ -10,6 +10,9 @@ export function createUI(
   const timerElement =
     document.getElementById('timerval');
 
+  const modeElement =
+    document.getElementById('mode-label');
+
   const mainMenu =
     document.getElementById('mainMenu');
 
@@ -58,12 +61,56 @@ export function createUI(
   const achievementStorageKey =
     'rotaZeroAchievements';
 
+  const drivingModes = {
+    eco: 'ECO',
+    comfort: 'COMFORT',
+    sport: 'SPORT'
+  };
+
+  let lastDrivingMode =
+    state.drivingMode || 'comfort';
+
   let unlockedAchievements =
     JSON.parse(
       localStorage.getItem(
         achievementStorageKey
       ) || '{}'
     );
+
+  function updateDrivingMode(
+    animate = false
+  ) {
+    if (!modeElement) return;
+
+    const mode =
+      state.drivingMode || 'comfort';
+
+    const modeName =
+      drivingModes[mode];
+
+    if (!modeName) return;
+
+    modeElement.textContent =
+      modeName;
+
+    if (!animate) return;
+
+    modeElement.classList.remove(
+      'mode-changing'
+    );
+
+    void modeElement.offsetWidth;
+
+    modeElement.classList.add(
+      'mode-changing'
+    );
+
+    window.setTimeout(() => {
+      modeElement.classList.remove(
+        'mode-changing'
+      );
+    }, 450);
+  }
 
   function renderAchievements() {
     Object.entries(
@@ -111,6 +158,8 @@ export function createUI(
   }
 
   renderAchievements();
+
+  updateDrivingMode();
 
   function getLawAlert(type) {
     const alerts = {
@@ -192,7 +241,8 @@ export function createUI(
   const loadingTips = [
     'Se você entrar e o jogo não tiver carregado, não se mexa.',
     'Para andar, use as setas ou W A S D.',
-    'Aperte F3 para ver as coordenadas.'
+    'Aperte F3 para ver as coordenadas.',
+    'Aperte M durante a corrida para mudar o modo.'
   ];
 
   function showRandomLoadingTip() {
@@ -227,6 +277,7 @@ export function createUI(
     }
 
     state.raceStarted = true;
+
     state.startTime =
       performance.now();
 
@@ -250,6 +301,8 @@ export function createUI(
     introOverlay.classList.remove(
       'hidden'
     );
+
+    updateDrivingMode();
   }
 
   function finishRace() {
@@ -402,6 +455,16 @@ export function createUI(
             performance.now() -
             state.startTime
           ) / 1000;
+      }
+
+      if (
+        state.drivingMode !==
+        lastDrivingMode
+      ) {
+        lastDrivingMode =
+          state.drivingMode;
+
+        updateDrivingMode(true);
       }
 
       const now =
