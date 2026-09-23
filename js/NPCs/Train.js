@@ -1782,19 +1782,41 @@ export function createTrafficTrain(
 
 
   /* =========================================================
-     ESTADO DO TREM
+     ESTADO DO TREM (usado pelos semáforos ferroviários)
   ========================================================= */
 
+  /*
+     distanceTraveled = posição da locomotiva ao longo da rota.
+     trainLength      = comprimento total do trem, da frente da
+                        locomotiva até o fim do último vagão.
+                        Serve para manter o sinal vermelho até o
+                        trem inteiro passar pelo cruzamento.
+  */
+
   update.getSignalState =
-    () => ({
+    () => {
 
-      distanceTraveled,
+      const lastPart =
+        train.userData.parts[
+          train.userData.parts.length - 1
+        ];
 
-      totalLength,
 
-      speed
+      return {
 
-    });
+        distanceTraveled,
+
+        totalLength,
+
+        speed,
+
+        trainLength:
+          lastPart.distanceBehind +
+          TRAIN_MODEL_LENGTH
+
+      };
+
+    };
 
 
   /* =========================================================

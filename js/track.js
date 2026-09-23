@@ -342,8 +342,31 @@ function createRailwaySignals(
 ) {
   const crossings = [];
 
+  // Segundos de antecedência com que o sinal fecha antes
+  // da locomotiva chegar ao cruzamento.
   const SIGNAL_WARNING_SECONDS = 9;
-  const SIGNAL_CLEARANCE_SECONDS = 13;
+
+  // Folga em segundos depois que o ÚLTIMO vagão sai do cruzamento.
+  const SIGNAL_CLEARANCE_SECONDS = 2;
+
+  // Distância acumulada ao longo da rota do trem.
+  // É o mesmo cálculo do Train.js, que descarta o último
+  // ponto (duplicado, porque a curva é fechada).
+  const routePoints =
+    trainRoute.slice(
+      0,
+      trainRoute.length - 1
+    );
+
+  const routeCumDist = [0];
+
+  for (let i = 1; i < routePoints.length; i++) {
+    routeCumDist[i] =
+      routeCumDist[i - 1] +
+      routePoints[i - 1].distanceTo(
+        routePoints[i]
+      );
+  }
 
   roads.forEach(({ samples, width }) => {
     samples.forEach((point, index) => {
@@ -422,6 +445,15 @@ function createRailwaySignals(
         x: closestTrainPoint.x,
         z: closestTrainPoint.z,
         trainIndex: closestTrainIndex,
+
+        // Posição do cruzamento medida ao longo da rota
+        // (mesma escala do distanceTraveled do trem).
+        distance:
+          routeCumDist[
+            closestTrainIndex %
+            routePoints.length
+          ],
+
         red: false
       };
 
@@ -554,39 +586,47 @@ function createRailwaySignals(
 
   return {
     update(trainState) {
+      const {
+        distanceTraveled,
+        totalLength,
+        speed,
+        trainLength
+      } = trainState;
+
       crossings.forEach(
         crossing => {
+          // Distância que a locomotiva ainda precisa andar
+          // até chegar ao cruzamento.
           const distanceToCrossing =
             (
-              crossing.trainIndex -
-              trainState.index +
-              trainState.routeLength
-            ) %
-            trainState.routeLength;
+              crossing.distance -
+              distanceTraveled +
+              totalLength
+            ) % totalLength;
 
+          // Distância que a locomotiva já passou do cruzamento.
           const distanceSinceCrossing =
             (
-              trainState.index -
-              crossing.trainIndex +
-              trainState.routeLength
-            ) %
-            trainState.routeLength;
+              distanceTraveled -
+              crossing.distance +
+              totalLength
+            ) % totalLength;
 
-          const timeToCrossing =
-            distanceToCrossing *
-            trainState.averageSegmentLength /
-            trainState.speed;
+          // Trem se aproximando: fecha o sinal com antecedência.
+          const approaching =
+            distanceToCrossing <=
+            speed * SIGNAL_WARNING_SECONDS;
 
-          const timeSinceCrossing =
-            distanceSinceCrossing *
-            trainState.averageSegmentLength /
-            trainState.speed;
+          // Trem passando: continua vermelho até o último
+          // vagão sair, mais uma pequena folga.
+          const crossingNow =
+            distanceSinceCrossing <=
+            trainLength +
+            speed * SIGNAL_CLEARANCE_SECONDS;
 
           crossing.red =
-            timeToCrossing <=
-              SIGNAL_WARNING_SECONDS ||
-            timeSinceCrossing <=
-              SIGNAL_CLEARANCE_SECONDS;
+            approaching ||
+            crossingNow;
 
           crossing.poles.forEach(
             pole => {
