@@ -2,7 +2,8 @@ import { state } from './state.js';
 
 export function createUI(
   onRaceStart = null,
-  onRaceFinish = null
+  onRaceFinish = null,
+  onBuildingEditorStart = null
 ) {
   const speedElement =
     document.getElementById('speedval');
@@ -403,6 +404,15 @@ export function createUI(
         );
       }
     );
+
+  document
+    .getElementById('editBuildingsBtn')
+    .addEventListener('click', () => {
+      mainMenu.classList.add('hidden');
+      showGame();
+      introOverlay.classList.add('hidden');
+      onBuildingEditorStart?.();
+    });
 
   document
     .getElementById('startBtn')

@@ -21,6 +21,7 @@ export function createCameraController(
   let smoothedPitch = 0;
   let reverseAngle = 0;
   let mouseIdleTime = 0;
+  let editorFocus = null;
 
   function requestLock() {
     if (
@@ -75,6 +76,21 @@ export function createCameraController(
   }
 
   const updateCamera = function(dt) {
+    if (editorFocus) {
+      const focus = editorFocus;
+      desiredPosition.set(
+        focus.position.x + 42,
+        focus.position.y + 48,
+        focus.position.z + 42
+      );
+      position.lerp(desiredPosition, Math.min(1, dt * 3));
+      camera.position.copy(position);
+      desiredLook.set(focus.position.x, focus.position.y + 8, focus.position.z);
+      lookTarget.lerp(desiredLook, Math.min(1, dt * 4));
+      camera.lookAt(lookTarget);
+      return;
+    }
+
     if (
       state.raceStarted &&
       !state.raceFinished &&
@@ -150,6 +166,12 @@ export function createCameraController(
 
   updateCamera.requestLock = requestLock;
   updateCamera.releaseLock = releaseLock;
+  updateCamera.setEditorFocus = object => {
+    editorFocus = object || null;
+  };
+  updateCamera.clearEditorFocus = () => {
+    editorFocus = null;
+  };
 
   updateCamera.dispose = () => {
     domElement?.removeEventListener(

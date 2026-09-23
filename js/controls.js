@@ -13,6 +13,7 @@ export function setupControls(startRace) {
     const key = event.key.toLowerCase();
 
     if (event.key === 'F3') return;
+    if (state.buildingEditorActive) return;
 
     if (key === 'm') {
 

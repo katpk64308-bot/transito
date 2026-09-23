@@ -1,3 +1,5 @@
+import { ROAD_W_MAIN, ROAD_W_OUTER, ROAD_W_SHORT } from './config.js';
+
 const MODEL_CONFIG = {
   escola: {
     file: 'modelo/escola.fbx',
@@ -35,18 +37,18 @@ const MODEL_CONFIG = {
       { position: { x: 420, y: 0, z: 20 }, rotation: { x: 0, y: -Math.PI / 4, z: 0 } }
     ]
   },
-  predio1: {
+   predio1: {
     file: 'modelo/cidade/predio1/Flatiron_Building_v1_L1.123cb356d0cd-9f00-4bc4-be97-260db4c03d17/13943_Flatiron_Building_v1_l1.obj',
     mtl: 'modelo/cidade/predio1/Flatiron_Building_v1_L1.123cb356d0cd-9f00-4bc4-be97-260db4c03d17/13943_Flatiron_Building_v1_l1.mtl',
-    position: { x: 174, y: 0, z: 85 },
-    scale: { x: .007, y: .007, z: .007 },
+    position: { x: 169.64, y: 0, z: 95 },
+    scale: { x: 0.007, y: 0.007, z: 0.007 },
     rotation: { x: -Math.PI / 2, y: 0, z: 0 },
     instances: [
-      { position: { x: 174, y: 0, z: 85 } },
-      { position: { x: -230, y: 0, z: -30 } },
-      { position: { x: -220, y: 0, z: 220 } },
-      { position: { x: 80, y: 0, z: 315 } },
-      { position: { x: 360, y: 0, z: 100 } }
+      { position: { x: 169.64, y: 0, z: 95 }, rotation: { x: -Math.PI / 2, y: 2.269, z: 0 } },
+      { position: { x: -231.06, y: 0, z: -14 }, rotation: { x: -Math.PI / 2, y: -1.658, z: 0 } },
+      { position: { x: -189, y: 0, z: 226 }, rotation: { x: -Math.PI / 2, y: -0.611, z: 0 } },
+      { position: { x: 141, y: 0, z: 345 }, rotation: { x: -Math.PI / 2, y: -0.96, z: 0 } },
+      { position: { x: 366.43, y: 0, z: 45 }, rotation: { x: -Math.PI / 2, y: 1.309, z: 0 } }
     ],
     castShadow: false,
     collision: { enabled: false },
@@ -55,15 +57,15 @@ const MODEL_CONFIG = {
   predio2: {
     file: 'modelo/cidade/predio2/chrysler_building_v1_L1.123c61b463a0-1adf-4cf0-9acf-5e8e8f908a80/13942_Chrysler_Building_V1_l1.obj',
     mtl: 'modelo/cidade/predio2/chrysler_building_v1_L1.123c61b463a0-1adf-4cf0-9acf-5e8e8f908a80/13942_Chrysler_Building_V1_l1.mtl',
-    position: { x: 428, y: 0, z: 282 },
-    scale: { x: .002, y: .002, z: .002 },
+    position: { x: 421, y: 0, z: 328 },
+    scale: { x: 0.002, y: 0.002, z: 0.002 },
     rotation: { x: -Math.PI / 2, y: 0, z: 0 },
     instances: [
-      { position: { x: 428, y: 0, z: 282 } },
-      { position: { x: 340, y: 0, z: 350 } },
-      { position: { x: 210, y: 0, z: 400 } },
-      { position: { x: -80, y: 0, z: 420 } },
-      { position: { x: -250, y: 0, z: 150 } }
+      { position: { x: 421, y: 0, z: 328 }, rotation: { x: -Math.PI / 2, y: 0.785, z: 0 } },
+      { position: { x: 351, y: 0, z: 341 }, rotation: { x: -Math.PI / 2, y: -3.927, z: 0 } },
+      { position: { x: 179, y: 0, z: 401 }, rotation: { x: -Math.PI / 2, y: -1.484, z: 0 } },
+      { position: { x: -76.49, y: 0, z: 422 }, rotation: { x: -Math.PI / 2, y: -0.611, z: 0 } },
+      { position: { x: -204, y: 0, z: 41 }, rotation: { x: -Math.PI / 2, y: -1.658, z: 0 } }
     ],
     castShadow: false,
     collision: { enabled: false },
@@ -73,14 +75,14 @@ const MODEL_CONFIG = {
     file: 'modelo/cidade/predio3/Massachussetshall.obj',
     mtl: 'modelo/cidade/predio3/Massachussetshall.mtl',
     position: { x: -193, y: 0, z: 251 },
-    scale: { x: .22, y: .22, z: .22 },
+    scale: { x: 0.22, y: 0.22, z: 0.22 },
     rotation: { x: 0, y: 0, z: 0 },
     instances: [
-      { position: { x: -193, y: 0, z: 251 } },
-      { position: { x: -150, y: 0, z: 360 } },
-      { position: { x: 80, y: 0, z: 430 } },
-      { position: { x: 300, y: 0, z: 260 } },
-      { position: { x: 430, y: 0, z: 70 } }
+      { position: { x: -193, y: 0, z: 251 }, rotation: { x: 0, y: 0, z: 0 } },
+      { position: { x: -150, y: 0, z: 360 }, rotation: { x: 0, y: 0, z: 0 } },
+      { position: { x: 80, y: 0, z: 430 }, rotation: { x: 0, y: 0, z: 0 } },
+      { position: { x: 300, y: 0, z: 260 }, rotation: { x: 0, y: 0, z: 0 } },
+      { position: { x: 430, y: 0, z: 70 }, rotation: { x: 0, y: 0, z: 0 } }
     ],
     castShadow: false,
     collision: { enabled: false },
@@ -89,22 +91,22 @@ const MODEL_CONFIG = {
   predio4: {
     file: 'modelo/cidade/predio4/Hospital_Building_V2_L3.123c3359fae7-7089-4dd3-993b-ce8739108426/10075_Hospital Building_V1_L3.obj',
     mtl: 'modelo/cidade/predio4/Hospital_Building_V2_L3.123c3359fae7-7089-4dd3-993b-ce8739108426/10075_Hospital Building_V1_L3.mtl',
-    position: { x: 246, y: 0, z: -27 },
-    scale: { x: .009, y: .009, z: .009 },
+    position: { x: 243, y: 0, z: -27 },
+    scale: { x: 0.009, y: 0.009, z: 0.009 },
     rotation: { x: -Math.PI / 2, y: 0, z: 0 },
     instances: [
-      { position: { x: 246, y: 0, z: -27 } },
-      { position: { x: 90, y: 0, z: -30 } },
-      { position: { x: -100, y: 0, z: -27 } },
-      { position: { x: -240, y: 0, z: 80 } },
-      { position: { x: 450, y: 0, z: 40 } }
+      { position: { x: 243, y: 0, z: -27 }, rotation: { x: -Math.PI / 2, y: -0.087, z: 0 } },
+      { position: { x: 99, y: 0, z: -24 }, rotation: { x: -Math.PI / 2, y: 0, z: 0 } },
+      { position: { x: -123, y: 0, z: -26 }, rotation: { x: -Math.PI / 2, y: 0, z: 0 } },
+      { position: { x: -260, y: 0, z: 84 }, rotation: { x: -Math.PI / 2, y: 2.356, z: 0 } },
+      { position: { x: 468.05, y: 0, z: 35 }, rotation: { x: -Math.PI / 2, y: -0.698, z: 0 } }
     ],
     castShadow: false,
     collision: { enabled: false },
     alignGround: true
   }
 };
-
+//=========================================================
 function createSidewalkStreetlights(trackSamples) {
   if (!trackSamples) return null;
 
@@ -146,6 +148,176 @@ function createSidewalkStreetlights(trackSamples) {
   });
 
   return instances;
+}
+
+function measureBuildingFootprint(model, config) {
+  const measuredModel = model.clone(true);
+  measuredModel.position.set(0, 0, 0);
+  measuredModel.scale.set(config.scale.x, config.scale.y, config.scale.z);
+  measuredModel.rotation.set(config.rotation.x, 0, config.rotation.z);
+
+  const measuredRoot = new THREE.Group();
+  measuredRoot.rotation.y = config.rotation.y;
+  measuredRoot.add(measuredModel);
+  measuredRoot.updateMatrixWorld(true);
+
+  const bounds = new THREE.Box3().setFromObject(measuredRoot);
+  const size = new THREE.Vector3();
+  const center = new THREE.Vector3();
+  bounds.getSize(size);
+  bounds.getCenter(center);
+
+  return {
+    radius: Math.hypot(size.x / 2, size.z / 2),
+    offsetX: center.x,
+    offsetZ: center.z
+  };
+}
+
+function closestPointOnPath(position, samples) {
+  let nearest = null;
+
+  for (let index = 0; index < samples.length - 1; index += 1) {
+    const a = samples[index];
+    const b = samples[index + 1];
+    const dx = b.x - a.x;
+    const dz = b.z - a.z;
+    const lengthSquared = dx * dx + dz * dz || 1;
+    const t = Math.max(0, Math.min(1,
+      ((position.x - a.x) * dx + (position.z - a.z) * dz) / lengthSquared));
+    const point = { x: a.x + dx * t, z: a.z + dz * t };
+    const distance = Math.hypot(position.x - point.x, position.z - point.z);
+
+    if (!nearest || distance < nearest.distance) {
+      nearest = { point, distance, tangentX: dx, tangentZ: dz };
+    }
+  }
+
+  return nearest;
+}
+
+function moveOutsidePath(position, samples, clearance, seed) {
+  const nearest = closestPointOnPath(position, samples);
+  if (!nearest || nearest.distance >= clearance) return;
+
+  let dx = position.x - nearest.point.x;
+  let dz = position.z - nearest.point.z;
+  let distance = nearest.distance;
+
+  if (distance < .001) {
+    const length = Math.hypot(nearest.tangentX, nearest.tangentZ) || 1;
+    const side = seed % 2 === 0 ? 1 : -1;
+    dx = -nearest.tangentZ / length * side;
+    dz = nearest.tangentX / length * side;
+    distance = 1;
+  }
+
+  const moveDistance = clearance - nearest.distance;
+  position.x += dx / distance * moveDistance;
+  position.z += dz / distance * moveDistance;
+}
+
+function moveOutsideBuilding(position, other, clearance, seed) {
+  let dx = position.x - other.x;
+  let dz = position.z - other.z;
+  let distance = Math.hypot(dx, dz);
+  if (distance >= clearance) return;
+
+  if (distance < .001) {
+    const angle = seed * 2.399963229728653;
+    dx = Math.cos(angle);
+    dz = Math.sin(angle);
+    distance = 1;
+  }
+
+  const moveDistance = clearance - Math.hypot(position.x - other.x, position.z - other.z);
+  position.x += dx / distance * moveDistance;
+  position.z += dz / distance * moveDistance;
+}
+
+function placeBuildingsBesideRoads(trackSamples, buildings) {
+  if (!trackSamples) return;
+
+  const roads = [
+    { samples: trackSamples.start, width: ROAD_W_MAIN },
+    { samples: trackSamples.outer, width: ROAD_W_OUTER },
+    { samples: trackSamples.shortcut, width: ROAD_W_SHORT },
+    { samples: trackSamples.final, width: ROAD_W_MAIN }
+  ].filter(road => road.samples?.length > 1);
+  const railway = trackSamples.train || [];
+  const placed = [];
+  const orderedBuildings = buildings.slice().sort((a, b) => a.order - b.order);
+
+  orderedBuildings.forEach(building => {
+    const { footprint, anchor, object, order } = building;
+    const position = {
+      x: anchor.x + footprint.offsetX,
+      z: anchor.z + footprint.offsetZ
+    };
+    let nearestRoad = null;
+
+    roads.forEach(road => {
+      const nearest = closestPointOnPath(position, road.samples);
+      if (nearest && (!nearestRoad || nearest.distance < nearestRoad.distance)) {
+        nearestRoad = { ...nearest, width: road.width };
+      }
+    });
+
+    if (nearestRoad) {
+      const sidewalkWidth = Math.min(nearestRoad.width * .25, 4.5);
+      const roadClearance =
+        nearestRoad.width / 2 + .55 + sidewalkWidth + footprint.radius + 2;
+
+      // Bring distant buildings back to the nearest street while keeping their
+      // original side of it. Nearby buildings stay at their authored position.
+      if (nearestRoad.distance > roadClearance + 18) {
+        const tangentLength =
+          Math.hypot(nearestRoad.tangentX, nearestRoad.tangentZ) || 1;
+        const normalX = -nearestRoad.tangentZ / tangentLength;
+        const normalZ = nearestRoad.tangentX / tangentLength;
+        const offsetX = position.x - nearestRoad.point.x;
+        const offsetZ = position.z - nearestRoad.point.z;
+        const sideOffset = offsetX * normalX + offsetZ * normalZ;
+        const side = sideOffset === 0
+          ? (order % 2 === 0 ? 1 : -1)
+          : Math.sign(sideOffset);
+
+        position.x = nearestRoad.point.x + normalX * roadClearance * side;
+        position.z = nearestRoad.point.z + normalZ * roadClearance * side;
+      }
+    }
+
+    for (let pass = 0; pass < 32; pass += 1) {
+      const previousX = position.x;
+      const previousZ = position.z;
+
+      roads.forEach(road => {
+        const sidewalkWidth = Math.min(road.width * .25, 4.5);
+        const clearance =
+          road.width / 2 + .55 + sidewalkWidth + footprint.radius + 2;
+        moveOutsidePath(position, road.samples, clearance, order);
+      });
+
+      if (railway.length > 1) {
+        moveOutsidePath(position, railway, footprint.radius + 4, order + 1);
+      }
+
+      placed.forEach(other => {
+        moveOutsideBuilding(
+          position,
+          other.position,
+          footprint.radius + other.radius + 3,
+          order + other.order
+        );
+      });
+
+      if (Math.hypot(position.x - previousX, position.z - previousZ) < .01) break;
+    }
+
+    object.position.x = position.x - footprint.offsetX;
+    object.position.z = position.z - footprint.offsetZ;
+    placed.push({ position, radius: footprint.radius, order });
+  });
 }
 
 function configureModel(model, config) {
@@ -213,6 +385,8 @@ function loadModel(config, onLoad, onError) {
 
 export function createModels(scene, trackSamples = null) {
   const colliders = [];
+  const buildingRecords = [];
+  const modelOrder = Object.keys(MODEL_CONFIG);
 
   Object.entries(MODEL_CONFIG).forEach(([name, config]) => {
     if (config.collision?.enabled) {
@@ -235,11 +409,64 @@ export function createModels(scene, trackSamples = null) {
     loadModel(
       config,
       model => {
+        if (name.startsWith('predio')) {
+          const modelInstances = config.instances ||
+            [{ position: config.position, rotation: config.rotation }];
+
+          modelInstances.forEach((instance, index) => {
+            const instanceConfig = {
+              ...config,
+              position: instance.position,
+              rotation: instance.rotation || config.rotation,
+              scale: instance.scale || config.scale
+            };
+            const modelObject = index === 0 ? model : model.clone(true);
+            const object = new THREE.Group();
+            object.name = `${name}-${index + 1}`;
+            const footprint = measureBuildingFootprint(modelObject, instanceConfig);
+            object.position.set(
+              instance.position.x,
+              0,
+              instance.position.z
+            );
+            object.rotation.y = instanceConfig.rotation.y;
+
+            const modelConfig = {
+              ...instanceConfig,
+              position: {
+                x: 0,
+                y: instance.position.y ?? 0,
+                z: 0
+              },
+              rotation: {
+                ...instanceConfig.rotation,
+                y: 0
+              }
+            };
+            configureModel(modelObject, modelConfig);
+            object.add(modelObject);
+            scene.add(object);
+            buildingRecords.push({
+              object,
+              footprint,
+              anchor: { ...instance.position },
+              modelName: name,
+              instanceIndex: index,
+              baseRotation: { ...instanceConfig.rotation },
+              order: modelOrder.indexOf(name) * 100 + index
+            });
+          });
+
+          placeBuildingsBesideRoads(trackSamples, buildingRecords);
+          return;
+        }
+
         const sidewalkStreetlights =
           name === 'poste1'
             ? createSidewalkStreetlights(trackSamples)
             : null;
-        const instances = sidewalkStreetlights || config.instances || [{ position: config.position, rotation: config.rotation }];
+        const instances = sidewalkStreetlights ||
+          config.instances || [{ position: config.position, rotation: config.rotation }];
         instances.forEach((instance, index) => {
           const instanceConfig = {
             ...config,
@@ -257,7 +484,7 @@ export function createModels(scene, trackSamples = null) {
     );
   });
 
-  return { colliders };
+  return { colliders, buildings: buildingRecords };
 }
 
 export { MODEL_CONFIG };

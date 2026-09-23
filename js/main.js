@@ -9,6 +9,7 @@ import { createMinimap } from './minimap.js';
 import { createUI } from './ui.js';
 import { createCoordinates } from './coordinates.js';
 import { createModels } from './modelos.js';
+import { createBuildingEditor } from './building-editor.js';
 
 import { createTrafficCar } from './NPCs/Cars.js';
 import { createTrafficTrain } from './NPCs/Train.js';
@@ -33,6 +34,11 @@ const bike = buildBike();
 scene.add(bike.group);
 
 const updateCamera = createCameraController(camera, state);
+const buildingEditor = createBuildingEditor(
+  models.buildings,
+  updateCamera,
+  () => document.getElementById('introOverlay').classList.remove('hidden')
+);
 
 const ui = createUI(
   () => {
@@ -40,7 +46,8 @@ const ui = createUI(
   },
   () => {
     updateCamera.releaseLock();
-  }
+  },
+  () => buildingEditor.activate()
 );
 
 window.addEventListener('shadowsChanged', event => {
@@ -343,6 +350,16 @@ function animate() {
       clock.getDelta(),
       0.05
     );
+
+  if (state.buildingEditorActive) {
+    buildingEditor.update();
+    updateCamera(dt);
+    drawMinimap();
+    updateCoordinates(state);
+    ui.update();
+    renderer.render(scene, camera);
+    return;
+  }
 
   if (!state.raceFinished) {
     updatePhysics(
