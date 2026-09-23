@@ -37,37 +37,41 @@ const MODEL_CONFIG = {
       { position: { x: 420, y: 0, z: 20 }, rotation: { x: 0, y: -Math.PI / 4, z: 0 } }
     ]
   },
-   predio1: {
+      predio1: {
     file: 'modelo/cidade/predio1/Flatiron_Building_v1_L1.123cb356d0cd-9f00-4bc4-be97-260db4c03d17/13943_Flatiron_Building_v1_l1.obj',
     mtl: 'modelo/cidade/predio1/Flatiron_Building_v1_L1.123cb356d0cd-9f00-4bc4-be97-260db4c03d17/13943_Flatiron_Building_v1_l1.mtl',
-    position: { x: 169.64, y: 0, z: 95 },
+    position: { x: 227, y: 0, z: 32 },
     scale: { x: 0.007, y: 0.007, z: 0.007 },
     rotation: { x: -Math.PI / 2, y: 0, z: 0 },
     instances: [
-      { position: { x: 169.64, y: 0, z: 95 }, rotation: { x: -Math.PI / 2, y: 2.269, z: 0 } },
-      { position: { x: -231.06, y: 0, z: -14 }, rotation: { x: -Math.PI / 2, y: -1.658, z: 0 } },
-      { position: { x: -189, y: 0, z: 226 }, rotation: { x: -Math.PI / 2, y: -0.611, z: 0 } },
-      { position: { x: 141, y: 0, z: 345 }, rotation: { x: -Math.PI / 2, y: -0.96, z: 0 } },
-      { position: { x: 366.43, y: 0, z: 45 }, rotation: { x: -Math.PI / 2, y: 1.309, z: 0 } }
+      { position: { x: 227, y: 0, z: 32 }, rotation: { x: -Math.PI / 2, y: 2.356, z: 0 } },
+      { position: { x: -221, y: 0, z: -18 }, rotation: { x: -Math.PI / 2, y: -1.745, z: 0 } },
+      { position: { x: -189, y: 0, z: 228 }, rotation: { x: -Math.PI / 2, y: -0.698, z: 0 } },
+      { position: { x: 133, y: 0, z: 355 }, rotation: { x: -Math.PI / 2, y: -0.785, z: 0 } },
+      { position: { x: 364.17, y: 0, z: 60.17 }, rotation: { x: -Math.PI / 2, y: 1.309, z: 0 } },
+      { position: { x: 215, y: 0, z: 18 }, rotation: { x: -Math.PI / 2, y: 13.788, z: 0 } }
     ],
     castShadow: false,
+    manualPlacement: true,
     collision: { enabled: false },
     alignGround: true
   },
   predio2: {
     file: 'modelo/cidade/predio2/chrysler_building_v1_L1.123c61b463a0-1adf-4cf0-9acf-5e8e8f908a80/13942_Chrysler_Building_V1_l1.obj',
     mtl: 'modelo/cidade/predio2/chrysler_building_v1_L1.123c61b463a0-1adf-4cf0-9acf-5e8e8f908a80/13942_Chrysler_Building_V1_l1.mtl',
-    position: { x: 421, y: 0, z: 328 },
+    position: { x: 413.71, y: 0, z: 320.707 },
     scale: { x: 0.002, y: 0.002, z: 0.002 },
     rotation: { x: -Math.PI / 2, y: 0, z: 0 },
     instances: [
-      { position: { x: 421, y: 0, z: 328 }, rotation: { x: -Math.PI / 2, y: 0.785, z: 0 } },
-      { position: { x: 351, y: 0, z: 341 }, rotation: { x: -Math.PI / 2, y: -3.927, z: 0 } },
-      { position: { x: 179, y: 0, z: 401 }, rotation: { x: -Math.PI / 2, y: -1.484, z: 0 } },
-      { position: { x: -76.49, y: 0, z: 422 }, rotation: { x: -Math.PI / 2, y: -0.611, z: 0 } },
-      { position: { x: -204, y: 0, z: 41 }, rotation: { x: -Math.PI / 2, y: -1.658, z: 0 } }
+      { position: { x: 413.71, y: 0, z: 320.707 }, rotation: { x: -Math.PI / 2, y: 0.785, z: 0 } },
+      { position: { x: 345.203, y: 0, z: 350.218 }, rotation: { x: -Math.PI / 2, y: -3.927, z: 0 } },
+      { position: { x: 185.212, y: 0, z: 400.31 }, rotation: { x: -Math.PI / 2, y: -1.484, z: 0 } },
+      { position: { x: -70.813, y: 0, z: 414.013 }, rotation: { x: -Math.PI / 2, y: -0.611, z: 0 } },
+      { position: { x: -204, y: 0, z: 41 }, rotation: { x: -Math.PI / 2, y: -1.658, z: 0 } },
+      { position: { x: 150, y: 0, z: 320.71 }, rotation: { x: -Math.PI / 2, y: 0.96, z: 0 } }
     ],
     castShadow: false,
+    manualPlacement: true,
     collision: { enabled: false },
     alignGround: true
   },
@@ -85,23 +89,26 @@ const MODEL_CONFIG = {
       { position: { x: 430, y: 0, z: 70 }, rotation: { x: 0, y: 0, z: 0 } }
     ],
     castShadow: false,
+    manualPlacement: true,
     collision: { enabled: false },
     alignGround: true
   },
   predio4: {
     file: 'modelo/cidade/predio4/Hospital_Building_V2_L3.123c3359fae7-7089-4dd3-993b-ce8739108426/10075_Hospital Building_V1_L3.obj',
     mtl: 'modelo/cidade/predio4/Hospital_Building_V2_L3.123c3359fae7-7089-4dd3-993b-ce8739108426/10075_Hospital Building_V1_L3.mtl',
-    position: { x: 243, y: 0, z: -27 },
+    position: { x: 244.22, y: 0, z: -29 },
     scale: { x: 0.009, y: 0.009, z: 0.009 },
     rotation: { x: -Math.PI / 2, y: 0, z: 0 },
     instances: [
-      { position: { x: 243, y: 0, z: -27 }, rotation: { x: -Math.PI / 2, y: -0.087, z: 0 } },
-      { position: { x: 99, y: 0, z: -24 }, rotation: { x: -Math.PI / 2, y: 0, z: 0 } },
-      { position: { x: -123, y: 0, z: -26 }, rotation: { x: -Math.PI / 2, y: 0, z: 0 } },
-      { position: { x: -260, y: 0, z: 84 }, rotation: { x: -Math.PI / 2, y: 2.356, z: 0 } },
-      { position: { x: 468.05, y: 0, z: 35 }, rotation: { x: -Math.PI / 2, y: -0.698, z: 0 } }
+      { position: { x: 244.22, y: 0, z: -29 }, rotation: { x: -Math.PI / 2, y: -0.087, z: 0 } },
+      { position: { x: -13, y: 0, z: -24 }, rotation: { x: -Math.PI / 2, y: 0, z: 0 } },
+      { position: { x: -122.45, y: 0, z: -26 }, rotation: { x: -Math.PI / 2, y: 0, z: 0 } },
+      { position: { x: -238, y: 0, z: 96 }, rotation: { x: -Math.PI / 2, y: 2.705, z: 0 } },
+      { position: { x: 473.425, y: 0, z: 1.153 }, rotation: { x: -Math.PI / 2, y: -0.698, z: 0 } },
+      { position: { x: 401, y: 0, z: 211 }, rotation: { x: -Math.PI / 2, y: 1.484, z: 0 } }
     ],
     castShadow: false,
+    manualPlacement: true,
     collision: { enabled: false },
     alignGround: true
   }
@@ -254,6 +261,12 @@ function placeBuildingsBesideRoads(trackSamples, buildings) {
       x: anchor.x + footprint.offsetX,
       z: anchor.z + footprint.offsetZ
     };
+    if (building.manualPlacement) {
+      object.position.x = anchor.x;
+      object.position.z = anchor.z;
+      placed.push({ position, radius: footprint.radius, order });
+      return;
+    }
     let nearestRoad = null;
 
     roads.forEach(road => {
@@ -453,6 +466,9 @@ export function createModels(scene, trackSamples = null) {
               modelName: name,
               instanceIndex: index,
               baseRotation: { ...instanceConfig.rotation },
+              manualPlacement: config.manualPlacement === true || Boolean(
+                config.instances?.length && config.instances.every(item => item.rotation)
+              ),
               order: modelOrder.indexOf(name) * 100 + index
             });
           });

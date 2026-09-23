@@ -22,6 +22,10 @@ export function createCameraController(
   let reverseAngle = 0;
   let mouseIdleTime = 0;
   let editorFocus = null;
+  let editorYaw = Math.PI / 4;
+  let editorPitch = .78;
+  let editorDistance = 75;
+  const editorPan = new THREE.Vector3();
 
   function requestLock() {
     if (
@@ -78,14 +82,18 @@ export function createCameraController(
   const updateCamera = function(dt) {
     if (editorFocus) {
       const focus = editorFocus;
+      const horizontalDistance = Math.cos(editorPitch) * editorDistance;
+      const targetX = focus.position.x + editorPan.x;
+      const targetY = focus.position.y + 8;
+      const targetZ = focus.position.z + editorPan.z;
       desiredPosition.set(
-        focus.position.x + 42,
-        focus.position.y + 48,
-        focus.position.z + 42
+        targetX + Math.sin(editorYaw) * horizontalDistance,
+        targetY + Math.sin(editorPitch) * editorDistance,
+        targetZ + Math.cos(editorYaw) * horizontalDistance
       );
       position.lerp(desiredPosition, Math.min(1, dt * 3));
       camera.position.copy(position);
-      desiredLook.set(focus.position.x, focus.position.y + 8, focus.position.z);
+      desiredLook.set(targetX, targetY, targetZ);
       lookTarget.lerp(desiredLook, Math.min(1, dt * 4));
       camera.lookAt(lookTarget);
       return;
@@ -167,10 +175,28 @@ export function createCameraController(
   updateCamera.requestLock = requestLock;
   updateCamera.releaseLock = releaseLock;
   updateCamera.setEditorFocus = object => {
+    if (object && object !== editorFocus) editorPan.set(0, 0, 0);
     editorFocus = object || null;
   };
   updateCamera.clearEditorFocus = () => {
     editorFocus = null;
+    editorPan.set(0, 0, 0);
+  };
+  updateCamera.orbitEditor = (deltaX, deltaY) => {
+    editorYaw -= deltaX * .006;
+    editorPitch = Math.max(.12, Math.min(1.48, editorPitch - deltaY * .005));
+  };
+  updateCamera.panEditor = (deltaX, deltaY) => {
+    const scale = editorDistance * .0018;
+    const rightX = Math.cos(editorYaw);
+    const rightZ = -Math.sin(editorYaw);
+    const backX = Math.sin(editorYaw);
+    const backZ = Math.cos(editorYaw);
+    editorPan.x += (-deltaX * rightX + deltaY * backX) * scale;
+    editorPan.z += (-deltaX * rightZ + deltaY * backZ) * scale;
+  };
+  updateCamera.zoomEditor = delta => {
+    editorDistance = Math.max(15, Math.min(240, editorDistance * Math.exp(delta * .001)));
   };
 
   updateCamera.dispose = () => {

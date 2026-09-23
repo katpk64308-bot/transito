@@ -75,6 +75,7 @@ function generateBuildingConfig(buildings) {
     lines.push(
       '    ],',
       `    castShadow: ${config.castShadow ?? false},`,
+      `    manualPlacement: true,`,
       `    collision: { enabled: ${config.collision?.enabled ?? false} },`,
       `    alignGround: ${config.alignGround ?? false}`,
       `  }${index < BUILDING_NAMES.length - 1 ? ',' : ''}`
@@ -84,17 +85,28 @@ function generateBuildingConfig(buildings) {
   }).join('\n');
 }
 
-export function createBuildingEditor(buildings, cameraController, onExit = null) {
+export function createBuildingEditor(scene, buildings, cameraController, onExit = null) {
   const panel = document.createElement('aside');
   panel.id = 'buildingEditor';
   panel.className = 'building-editor hidden';
   panel.innerHTML = `
     <h2>Editor de prédios</h2>
-    <p>Escolha um prédio e ajuste a posição. A câmera acompanha o prédio selecionado.</p>
+    <p>Escolha um prédio e ajuste a posição. Arraste com o botão esquerdo para orbitar; botão direito para mover a câmera; use a roda para aproximar.</p>
     <label class="editor-field">
       Prédio
       <select id="buildingEditorSelect"></select>
     </label>
+    <div class="editor-fields">
+      <label class="editor-field">Adicionar modelo
+        <select id="buildingEditorAddType">
+          <option value="predio1">Prédio 1</option>
+          <option value="predio2">Prédio 2</option>
+          <option value="predio3">Prédio 3</option>
+          <option value="predio4">Prédio 4</option>
+        </select>
+      </label>
+      <button id="buildingEditorAdd" type="button">Adicionar prédio/estrutura</button>
+    </div>
     <div class="editor-fields">
       <label class="editor-field">X <input id="buildingEditorX" type="number" step="1"></label>
       <label class="editor-field">Z <input id="buildingEditorZ" type="number" step="1"></label>
@@ -114,6 +126,8 @@ export function createBuildingEditor(buildings, cameraController, onExit = null)
   const xInput = panel.querySelector('#buildingEditorX');
   const zInput = panel.querySelector('#buildingEditorZ');
   const rotationInput = panel.querySelector('#buildingEditorRotation');
+  const addType = panel.querySelector('#buildingEditorAddType');
+  const addButton = panel.querySelector('#buildingEditorAdd');
   const output = panel.querySelector('#buildingEditorOutput');
   let selectedName = null;
   let lastCount = -1;
@@ -203,6 +217,34 @@ export function createBuildingEditor(buildings, cameraController, onExit = null)
     input.addEventListener('input', applyFields)
   );
 
+  addButton.addEventListener('click', () => {
+    const modelName = addType.value;
+    const source = getRecords().find(record => record.modelName === modelName);
+    if (!source) return;
+    const indices = buildings.filter(record => record.modelName === modelName).map(record => record.instanceIndex);
+    const instanceIndex = Math.max(-1, ...indices) + 1;
+    const object = source.object.clone(true);
+    object.name = `${modelName}-${instanceIndex + 1}`;
+    object.position.set(source.object.position.x + 30, 0, source.object.position.z);
+    object.rotation.copy(source.object.rotation);
+    scene.add(object);
+    const record = {
+      object,
+      footprint: { ...source.footprint },
+      anchor: { x: object.position.x, y: 0, z: object.position.z },
+      modelName,
+      instanceIndex,
+      baseRotation: { ...source.baseRotation },
+      manualPlacement: true,
+      order: Math.max(-1, ...buildings.map(item => item.order)) + 1
+    };
+    buildings.push(record);
+    selectedName = object.name;
+    lastCount = -1;
+    syncList();
+    refreshFields(record);
+  });
+
   panel.querySelector('#buildingEditorFocus').addEventListener('click', () => {
     refreshFields(selectedRecord());
   });
@@ -222,11 +264,73 @@ export function createBuildingEditor(buildings, cameraController, onExit = null)
   }
 
   panel.querySelector('#buildingEditorClose').addEventListener('click', deactivate);
+  const canvas = document.getElementById('three-canvas');
+  let cameraDrag = null;
+  let previousPointer = null;
+
+  canvas.addEventListener('contextmenu', event => {
+    if (state.buildingEditorActive) event.preventDefault();
+  });
+  canvas.addEventListener('pointerdown', event => {
+    if (!state.buildingEditorActive || (event.button !== 0 && event.button !== 2)) {
+      return;
+    }
+    cameraDrag = event.button === 0 ? 'orbit' : 'pan';
+    previousPointer = { x: event.clientX, y: event.clientY };
+    canvas.setPointerCapture(event.pointerId);
+  });
+  canvas.addEventListener('pointermove', event => {
+    if (!cameraDrag || !previousPointer) return;
+    const deltaX = event.clientX - previousPointer.x;
+    const deltaY = event.clientY - previousPointer.y;
+    previousPointer = { x: event.clientX, y: event.clientY };
+    if (cameraDrag === 'orbit') {
+      cameraController.orbitEditor(deltaX, deltaY);
+    } else {
+      cameraController.panEditor(deltaX, deltaY);
+    }
+  });
+  const stopCameraDrag = () => {
+    cameraDrag = null;
+    previousPointer = null;
+  };
+  canvas.addEventListener('pointerup', stopCameraDrag);
+  canvas.addEventListener('pointercancel', stopCameraDrag);
+  canvas.addEventListener('wheel', event => {
+    if (!state.buildingEditorActive) return;
+    event.preventDefault();
+    cameraController.zoomEditor(event.deltaY);
+  }, { passive: false });
+
   window.addEventListener('keydown', event => {
     if (state.buildingEditorActive && event.key === 'Escape') {
       event.preventDefault();
       event.stopImmediatePropagation();
       deactivate();
+      return;
+    }
+
+    if (!state.buildingEditorActive) return;
+    if (event.target instanceof HTMLElement &&
+        event.target.closest('input, select, textarea, button')) {
+      return;
+    }
+
+    const panKeys = {
+      w: [0, -120],
+      arrowup: [0, -120],
+      s: [0, 120],
+      arrowdown: [0, 120],
+      a: [-120, 0],
+      arrowleft: [-120, 0],
+      d: [120, 0],
+      arrowright: [120, 0]
+    };
+    const pan = panKeys[event.key.toLowerCase()];
+    if (pan) {
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      cameraController.panEditor(pan[0], pan[1]);
     }
   });
 

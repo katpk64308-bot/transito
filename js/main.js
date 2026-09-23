@@ -35,6 +35,7 @@ scene.add(bike.group);
 
 const updateCamera = createCameraController(camera, state);
 const buildingEditor = createBuildingEditor(
+  scene,
   models.buildings,
   updateCamera,
   () => document.getElementById('introOverlay').classList.remove('hidden')
