@@ -14,7 +14,7 @@ import { createBuildingEditor } from './building-editor.js';
 import { createTrafficCar } from './NPCs/Cars.js';
 import { createTrafficTrain } from './NPCs/Train.js';
 
-const { renderer, scene, camera } = createScene();
+const { renderer, scene, camera, updateDayNight } = createScene();
 
 const track = createTrack(scene);
 
@@ -76,6 +76,7 @@ const clock = new THREE.Clock();
 const stage = document.getElementById('stage');
 
 let previousViolation = null;
+let lastDayNightTick = performance.now();
 
 const drivingModes = {
   eco: {
@@ -349,10 +350,15 @@ function animate() {
       'game-hidden'
     )
   ) {
+    lastDayNightTick = performance.now();
     clock.getDelta();
     return;
   }
 
+  const now = performance.now();
+  updateDayNight((now - lastDayNightTick) / 1000);
+  lastDayNightTick = now;
+  bike.setHeadlightsEnabled(state.playerLightEnabled);
   const dt =
     Math.min(
       clock.getDelta(),

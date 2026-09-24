@@ -15,6 +15,10 @@ export function setupControls(startRace) {
     if (event.key === 'F3') return;
     if (state.buildingEditorActive) return;
 
+    if (key === 'r' && !event.repeat) {
+      state.playerLightEnabled = !state.playerLightEnabled;
+    }
+
     if (key === 'm') {
 
       const currentIndex =

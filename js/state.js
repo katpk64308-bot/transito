@@ -61,7 +61,7 @@ export const state = {
   elapsed: 0,
 
   cameraInvertY: false,
-
+  playerLightEnabled: false,
   drivingMode: 'eco',
   maxSpeed: physics.MODES.eco,
 

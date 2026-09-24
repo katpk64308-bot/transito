@@ -113,6 +113,58 @@ export function buildBike() {
 
     group.add(modelHolder);
 
+    const headlightSpots = [];
+    const headlightBulbs = [];
+    [-0.28, 0.28].forEach(x => {
+        const bulb = new THREE.Mesh(
+            new THREE.SphereGeometry(0.11, 10, 8),
+            new THREE.MeshBasicMaterial({
+                color: 0xfff1cc,
+                transparent: true,
+                opacity: 1
+            })
+        );
+        bulb.position.set(x, 1.02, 1.15);
+        bulb.visible = false;
+        group.add(bulb);
+        headlightBulbs.push(bulb);
+
+        const spot = new THREE.SpotLight(
+            0xffedc4,
+            24,
+            55,
+            Math.PI / 8,
+            0.55,
+            1.4
+        );
+        spot.position.set(x, 1.02, 1.15);
+        // Mantém a luz registrada desde o primeiro frame para evitar uma
+        // recompilação pesada dos shaders quando o jogador aperta R.
+        // Usa um único feixe: dois feixes sobrepostos deixavam luz escapar
+        // pelas sombras do farol que não calculava oclusão.
+        spot.intensity = 0.0001;
+        // O farol é móvel; sombras dinâmicas dele causavam artefatos na bike.
+        // A sombra normal da bike continua sendo projetada pela luz direcional.
+        spot.castShadow = false;
+
+        const target = new THREE.Object3D();
+        target.position.set(x, 0.35, 34);
+        group.add(spot, target);
+        spot.target = target;
+        headlightSpots.push(spot);
+    });
+
+    function setHeadlightsEnabled(enabled) {
+        headlightSpots.forEach(spot => {
+            spot.visible = true;
+            spot.intensity = enabled ? 24 : 0.0001;
+        });
+        headlightBulbs.forEach(bulb => {
+            bulb.visible = enabled;
+            bulb.material.opacity = enabled ? 1 : 0;
+        });
+    }
+
 
     // -----------------------------------------------------------------------
     // RODAS
@@ -487,7 +539,7 @@ export function buildBike() {
                         true;
 
                     objeto.receiveShadow =
-                        true;
+                        false;
 
 
                     // Mantém os materiais originais
@@ -688,7 +740,9 @@ export function buildBike() {
 
         wheelFront,
 
-        wheelBack
+        wheelBack,
+
+        setHeadlightsEnabled
 
     };
 

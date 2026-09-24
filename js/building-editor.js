@@ -29,7 +29,7 @@ function getBuildingInstances(name, buildings) {
     return records.map(record => ({
       position: {
         x: record.object.position.x,
-        y: 0,
+        y: record.object.position.y,
         z: record.object.position.z
       },
       rotation: {
@@ -43,7 +43,7 @@ function getBuildingInstances(name, buildings) {
   const configuredInstances = config.instances ||
     [{ position: config.position, rotation: config.rotation }];
   return configuredInstances.map(instance => ({
-    position: { ...instance.position },
+    position: { ...instance.position, y: instance.position.y ?? 0 },
     rotation: instance.rotation || config.rotation
   }));
 }
@@ -110,6 +110,7 @@ export function createBuildingEditor(scene, buildings, cameraController, onExit 
     <div class="editor-fields">
       <label class="editor-field">X <input id="buildingEditorX" type="number" step="1"></label>
       <label class="editor-field">Z <input id="buildingEditorZ" type="number" step="1"></label>
+      <label class="editor-field">Altura Y <input id="buildingEditorY" type="number" step="1"></label>
       <label class="editor-field">Giro horizontal (°) <input id="buildingEditorRotation" type="number" step="5"></label>
     </div>
     <div class="editor-buttons">
@@ -125,6 +126,7 @@ export function createBuildingEditor(scene, buildings, cameraController, onExit 
   const select = panel.querySelector('#buildingEditorSelect');
   const xInput = panel.querySelector('#buildingEditorX');
   const zInput = panel.querySelector('#buildingEditorZ');
+  const yInput = panel.querySelector('#buildingEditorY');
   const rotationInput = panel.querySelector('#buildingEditorRotation');
   const addType = panel.querySelector('#buildingEditorAddType');
   const addButton = panel.querySelector('#buildingEditorAdd');
@@ -144,6 +146,7 @@ export function createBuildingEditor(scene, buildings, cameraController, onExit 
     if (!record) return;
     xInput.value = record.object.position.x.toFixed(2);
     zInput.value = record.object.position.z.toFixed(2);
+    yInput.value = record.object.position.y.toFixed(2);
     rotationInput.value = (record.object.rotation.y * 180 / Math.PI).toFixed(0);
     cameraController.setEditorFocus(record.object);
   }
@@ -163,19 +166,22 @@ export function createBuildingEditor(scene, buildings, cameraController, onExit 
   function applyFields() {
     const record = selectedRecord();
     if (!record) return;
-    if ([xInput, zInput, rotationInput].some(input => input.value.trim() === '')) {
+    if ([xInput, yInput, zInput, rotationInput].some(input => input.value.trim() === '')) {
       return;
     }
 
     const x = Number(xInput.value);
+    const y = Number(yInput.value);
     const z = Number(zInput.value);
     const rotationDegrees = Number(rotationInput.value);
-    if (![x, z, rotationDegrees].every(Number.isFinite)) return;
+    if (![x, y, z, rotationDegrees].every(Number.isFinite)) return;
 
     record.object.position.x = x;
+    record.object.position.y = y;
     record.object.position.z = z;
     record.object.rotation.y = rotationDegrees * Math.PI / 180;
     record.anchor.x = x;
+    record.anchor.y = y;
     record.anchor.z = z;
     updateFootprint(record);
   }
@@ -213,7 +219,7 @@ export function createBuildingEditor(scene, buildings, cameraController, onExit 
     selectedName = select.value;
     refreshFields(selectedRecord());
   });
-  [xInput, zInput, rotationInput].forEach(input =>
+  [xInput, yInput, zInput, rotationInput].forEach(input =>
     input.addEventListener('input', applyFields)
   );
 
@@ -225,13 +231,13 @@ export function createBuildingEditor(scene, buildings, cameraController, onExit 
     const instanceIndex = Math.max(-1, ...indices) + 1;
     const object = source.object.clone(true);
     object.name = `${modelName}-${instanceIndex + 1}`;
-    object.position.set(source.object.position.x + 30, 0, source.object.position.z);
+    object.position.set(source.object.position.x + 30, source.object.position.y, source.object.position.z);
     object.rotation.copy(source.object.rotation);
     scene.add(object);
     const record = {
       object,
       footprint: { ...source.footprint },
-      anchor: { x: object.position.x, y: 0, z: object.position.z },
+      anchor: { x: object.position.x, y: object.position.y, z: object.position.z },
       modelName,
       instanceIndex,
       baseRotation: { ...source.baseRotation },

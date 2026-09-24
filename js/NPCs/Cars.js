@@ -1,5 +1,6 @@
 import { state } from '../state.js';
 import { isRedRailwaySignalAhead } from './semaforo.js';
+import { registerNightLight } from '../scene.js';
 
 /* ------------------------------------------------------------------ */
 /*  MODELOS 3D (GLB)                                                   */
@@ -385,6 +386,37 @@ function lerpAngle(current, target, amount) {
   return current + difference * amount;
 }
 
+function addCarNightLights(scene, car) {
+  [-0.62, 0.62].forEach(x => {
+    const glow = new THREE.Mesh(
+      new THREE.SphereGeometry(0.13, 10, 8),
+      new THREE.MeshBasicMaterial({
+        color: 0xfff0c4,
+        transparent: true,
+        opacity: 1
+      })
+    );
+    glow.position.set(x, 0.82, 2.05);
+    car.add(glow);
+
+    const light = new THREE.SpotLight(
+      0xffedc4,
+      48,
+      52,
+      Math.PI / 7,
+      0.55,
+      1.4
+    );
+    light.position.set(x, 0.82, 2.05);
+
+    const target = new THREE.Object3D();
+    target.position.set(x, 0.35, 28);
+    car.add(light, target);
+    light.target = target;
+    registerNightLight(scene, light, glow);
+  });
+}
+
 export function createTrafficCar(
   scene,
   track,
@@ -421,6 +453,7 @@ export function createTrafficCar(
     const car = new THREE.Group();
 
     scene.add(car);
+    addCarNightLights(scene, car);
 
     const vehicle = {
       car,

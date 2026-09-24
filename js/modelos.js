@@ -1,4 +1,66 @@
 import { ROAD_W_MAIN, ROAD_W_OUTER, ROAD_W_SHORT } from './config.js';
+import { registerNightGlow, registerNightLight } from './scene.js';
+
+function addStreetlightEmitter(scene, streetlight, index, lightStride) {
+  streetlight.updateMatrixWorld(true);
+
+  const bounds = new THREE.Box3().setFromObject(streetlight);
+  const position = new THREE.Vector3(
+    (bounds.min.x + bounds.max.x) / 2,
+    bounds.max.y - 0.35,
+    (bounds.min.z + bounds.max.z) / 2
+  );
+  const bulb = new THREE.Mesh(
+    new THREE.SphereGeometry(0.3, 12, 8),
+    new THREE.MeshBasicMaterial({
+      color: 0xfff0c7,
+      transparent: true,
+      opacity: 1
+    })
+  );
+  bulb.position.copy(position);
+
+  const poolGeometry = new THREE.CircleGeometry(7, 24);
+  const poolColors = new Float32Array(
+    poolGeometry.attributes.position.count * 4
+  );
+  for (let vertex = 0; vertex < poolGeometry.attributes.position.count; vertex += 1) {
+    const offset = vertex * 4;
+    poolColors[offset] = 1;
+    poolColors[offset + 1] = 0.78;
+    poolColors[offset + 2] = 0.48;
+    poolColors[offset + 3] = vertex === 0 ? 1 : 0;
+  }
+  poolGeometry.setAttribute(
+    'color',
+    new THREE.Float32BufferAttribute(poolColors, 4)
+  );
+  const pool = new THREE.Mesh(
+    poolGeometry,
+    new THREE.MeshBasicMaterial({
+      color: 0xffd08a,
+      vertexColors: true,
+      transparent: true,
+      opacity: 1,
+      depthWrite: false,
+      side: THREE.DoubleSide
+    })
+  );
+  pool.rotation.x = -Math.PI / 2;
+  pool.position.set(position.x, 0.12, position.z);
+
+  scene.add(bulb, pool);
+  registerNightGlow(scene, [bulb, pool]);
+
+  // Reduz a quantidade de luzes locais e mant�m brilho visivel entre elas.
+  // Distribui os emissores pela cidade sem criar uma luz para cada poste.
+  if (index % lightStride === 0) {
+    const light = new THREE.PointLight(0xffd58a, 140, 65, 2);
+    light.position.copy(position);
+    scene.add(light);
+    registerNightLight(scene, light);
+  }
+}
 
 
 const MODEL_CONFIG = {
@@ -52,7 +114,7 @@ const MODEL_CONFIG = {
       { position: { x: 364.17, y: 0, z: 60.17 }, rotation: { x: -Math.PI / 2, y: 1.309, z: 0 } },
       { position: { x: 215, y: 0, z: 18 }, rotation: { x: -Math.PI / 2, y: 13.788, z: 0 } }
     ],
-    castShadow: false,
+    castShadow: true,
     manualPlacement: true,
     collision: { enabled: false },
     alignGround: true
@@ -71,7 +133,7 @@ const MODEL_CONFIG = {
       { position: { x: -204, y: 0, z: 41 }, rotation: { x: -Math.PI / 2, y: -1.658, z: 0 } },
       { position: { x: 150, y: 0, z: 320.71 }, rotation: { x: -Math.PI / 2, y: 0.96, z: 0 } }
     ],
-    castShadow: false,
+    castShadow: true,
     manualPlacement: true,
     collision: { enabled: false },
     alignGround: true
@@ -89,7 +151,7 @@ const MODEL_CONFIG = {
       { position: { x: 300, y: 0, z: 260 }, rotation: { x: 0, y: 0, z: 0 } },
       { position: { x: 430, y: 0, z: 70 }, rotation: { x: 0, y: 0, z: 0 } }
     ],
-    castShadow: false,
+    castShadow: true,
     manualPlacement: true,
     collision: { enabled: false },
     alignGround: true
@@ -108,11 +170,11 @@ const MODEL_CONFIG = {
       { position: { x: 473.425, y: 0, z: 1.153 }, rotation: { x: -Math.PI / 2, y: -0.698, z: 0 } },
       { position: { x: 401, y: 0, z: 211 }, rotation: { x: -Math.PI / 2, y: 1.484, z: 0 } }
     ],
-    castShadow: false,
+    castShadow: true,
     manualPlacement: true,
     collision: { enabled: false },
     alignGround: true
-  }
+  },
 };
 //=========================================================
 function createSidewalkStreetlights(trackSamples) {
@@ -121,6 +183,7 @@ function createSidewalkStreetlights(trackSamples) {
   const roads = [
     { samples: trackSamples.start, width: 27, step: 18 },
     { samples: trackSamples.outer, width: 25, step: 22 },
+    { samples: trackSamples.shortcut, width: ROAD_W_SHORT, step: 18 },
     { samples: trackSamples.final, width: 27, step: 24 }
   ];
 
@@ -348,9 +411,7 @@ function configureModel(model, config) {
   model.traverse(object => {
     if (!object.isMesh) return;
     object.castShadow = config.castShadow ?? false;
-    // Os modelos de cenário são grandes; receber sombras neles custa muitos
-    // pixels por quadro e não muda a jogabilidade.
-    object.receiveShadow = false;
+    object.receiveShadow = config.receiveShadow ?? config.castShadow ?? false;
 
     const materials = Array.isArray(object.material) ? object.material : [object.material];
     materials.forEach(material => {
@@ -440,7 +501,7 @@ export function createModels(scene, trackSamples = null) {
             const footprint = measureBuildingFootprint(modelObject, instanceConfig);
             object.position.set(
               instance.position.x,
-              0,
+              instance.position.y ?? 0,
               instance.position.z
             );
             object.rotation.y = instanceConfig.rotation.y;
@@ -449,7 +510,7 @@ export function createModels(scene, trackSamples = null) {
               ...instanceConfig,
               position: {
                 x: 0,
-                y: instance.position.y ?? 0,
+                y: 0,
                 z: 0
               },
               rotation: {
@@ -484,6 +545,10 @@ export function createModels(scene, trackSamples = null) {
             : null;
         const instances = sidewalkStreetlights ||
           config.instances || [{ position: config.position, rotation: config.rotation }];
+        const streetlightLightStride = Math.max(
+          1,
+          Math.ceil(instances.length / 12)
+        );
         instances.forEach((instance, index) => {
           const instanceConfig = {
             ...config,
@@ -495,6 +560,14 @@ export function createModels(scene, trackSamples = null) {
           object.name = `${name}-${index + 1}`;
           configureModel(object, instanceConfig);
           scene.add(object);
+          if (name === 'poste1') {
+            addStreetlightEmitter(
+              scene,
+              object,
+              index,
+              streetlightLightStride
+            );
+          }
         });
       },
       error => console.error(`Não foi possível carregar o modelo ${name}:`, error)
