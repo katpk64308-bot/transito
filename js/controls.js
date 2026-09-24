@@ -8,6 +8,50 @@ const modeOrder = [
 
 export function setupControls(startRace) {
 
+  const touchControls = document.getElementById('touch-controls');
+
+  const enterFullscreen = () => {
+    const root = document.documentElement;
+    const request = root.requestFullscreen || root.webkitRequestFullscreen;
+
+    if (!request || document.fullscreenElement || document.webkitFullscreenElement) return;
+
+    try {
+      const result = request.call(root);
+      result?.catch?.(() => {});
+      screen.orientation?.lock?.('landscape').catch?.(() => {});
+    } catch {
+      // O navegador pode não permitir tela cheia ou rotação neste dispositivo.
+    }
+  };
+
+  document.getElementById('startBtn')?.addEventListener('click', enterFullscreen);
+
+  touchControls?.querySelectorAll('[data-control]').forEach(button => {
+    const control = button.dataset.control;
+
+    const release = () => {
+      keys[control] = false;
+      button.classList.remove('is-pressed');
+    };
+
+    button.addEventListener('pointerdown', event => {
+      event.preventDefault();
+      if (state.buildingEditorActive) return;
+
+      enterFullscreen();
+      button.setPointerCapture?.(event.pointerId);
+      keys[control] = true;
+      button.classList.add('is-pressed');
+
+      if (!state.raceStarted && !state.raceFinished) startRace();
+    });
+
+    ['pointerup', 'pointercancel', 'lostpointercapture'].forEach(type =>
+      button.addEventListener(type, release)
+    );
+  });
+
   addEventListener('keydown', event => {
 
     const key = event.key.toLowerCase();

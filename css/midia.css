@@ -1,0 +1,100 @@
+/* Ajustes de layout e controles para telas pequenas. */
+@media (max-width: 1050px) {
+  html,
+  body,
+  button {
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-touch-callout: none;
+  }
+
+  html,
+  body {
+    overscroll-behavior: none;
+  }
+
+  #touch-controls {
+    position: fixed;
+    z-index: 8;
+    inset: auto 0 max(18px, env(safe-area-inset-bottom));
+    display: none;
+    justify-content: space-between;
+    align-items: flex-end;
+    padding: 0 18px;
+    pointer-events: none;
+    user-select: none;
+  }
+
+  #touch-controls:not(.game-hidden) {
+    display: flex;
+  }
+
+  .touch-control-group {
+    display: flex;
+    gap: 12px;
+    pointer-events: auto;
+  }
+
+  .touch-control {
+    width: 56px;
+    height: 56px;
+    border: 1px solid #ffffff70;
+    border-radius: 50%;
+    color: #fff;
+    background: #101114a8;
+    box-shadow: 0 3px 12px #0008;
+    font: 700 26px/1 'Segoe UI', Arial, sans-serif;
+    touch-action: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .touch-control.is-pressed {
+    color: var(--accent);
+    background: #34302ac9;
+    transform: scale(.94);
+  }
+
+  #speedbox {
+    left: 14px;
+    bottom: 14px;
+    gap: 10px;
+  }
+
+  #speedval {
+    font-size: 52px;
+  }
+
+  #speedunit {
+    font-size: 14px;
+  }
+
+  #driving-mode {
+    min-width: 95px;
+    padding-left: 9px;
+  }
+
+  #mode-label {
+    font-size: 14px;
+  }
+
+  #mode-key {
+    font-size: 8px;
+  }
+
+  .building-editor {
+    top: auto;
+    right: 8px;
+    bottom: 8px;
+    width: min(360px, calc(100vw - 16px));
+    max-height: 52vh;
+    transform: none;
+    padding: 14px;
+  }
+
+  #minimap-wrap {
+    right: 12px;
+    top: 12px;
+    width: 150px;
+    height: 150px;
+  }
+}

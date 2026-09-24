@@ -8,12 +8,24 @@
     <title>ROTA ZERO — Corrida de Moto</title>
 
     <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/midia.css">
 </head>
 
 <body>
 
     <div id="stage" class="game-element game-hidden">
         <canvas id="three-canvas"></canvas>
+    </div>
+
+    <div id="touch-controls" class="game-element game-hidden" aria-label="Controles de pilotagem">
+        <div class="touch-control-group touch-movement">
+            <button class="touch-control" type="button" data-control="s" aria-label="Frear">▼</button>
+            <button class="touch-control" type="button" data-control="w" aria-label="Acelerar">▲</button>
+        </div>
+        <div class="touch-control-group touch-steering">
+            <button class="touch-control" type="button" data-control="a" aria-label="Virar à esquerda">◀</button>
+            <button class="touch-control" type="button" data-control="d" aria-label="Virar à direita">▶</button>
+        </div>
     </div>
 
     <div id="minimap-wrap" class="game-element game-hidden">
