@@ -1,16 +1,9 @@
 import { startPts, physics } from './config.js';
 
-const startTangentX =
-  startPts[1][0] - startPts[0][0];
-
-const startTangentZ =
-  startPts[1][1] - startPts[0][1];
-
+const startTangentX = startPts[1][0] - startPts[0][0];
+const startTangentZ = startPts[1][1] - startPts[0][1];
 const startLength =
-  Math.hypot(
-    startTangentX,
-    startTangentZ
-  ) || 1;
+  Math.hypot(startTangentX, startTangentZ) || 1;
 
 const laneOffset = 7;
 
@@ -21,23 +14,19 @@ const leftZ =
   startTangentX / startLength;
 
 const initialX =
-  startPts[0][0] +
-  leftX * laneOffset;
+  startPts[0][0] + leftX * laneOffset;
 
 const initialZ =
-  startPts[0][1] +
-  leftZ * laneOffset;
+  startPts[0][1] + leftZ * laneOffset;
 
-const initialHeading =
-  Math.atan2(
-    startPts[1][0] - startPts[0][0],
-    startPts[1][1] - startPts[0][1]
-  );
+const initialHeading = Math.atan2(
+  startPts[1][0] - startPts[0][0],
+  startPts[1][1] - startPts[0][1]
+);
 
 export const state = {
   x: initialX,
   z: initialZ,
-
   heading: initialHeading,
 
   speed: 0,
@@ -46,6 +35,10 @@ export const state = {
 
   raceStarted: false,
   raceFinished: false,
+
+  // PAUSA
+  paused: false,
+  pauseStarted: 0,
 
   contramao: false,
   foraEstrada: false,
@@ -62,6 +55,7 @@ export const state = {
 
   cameraInvertY: false,
   playerLightEnabled: false,
+
   drivingMode: 'eco',
   maxSpeed: physics.MODES.eco,
 
@@ -116,9 +110,7 @@ export function cycleDrivingMode() {
   return state.drivingMode;
 }
 
-export function resetRaceState(
-  phase = 1
-) {
+export function resetRaceState(phase = 1) {
   state.phase = phase;
 
   state.x = initialX;
@@ -129,6 +121,10 @@ export function resetRaceState(
 
   state.raceStarted = false;
   state.raceFinished = false;
+
+  // PAUSA
+  state.paused = false;
+  state.pauseStarted = 0;
 
   state.contramao = false;
   state.foraEstrada = false;

@@ -14,69 +14,172 @@ import { createBuildingEditor } from './building-editor.js';
 import { createTrafficCar } from './NPCs/Cars.js';
 import { createTrafficTrain } from './NPCs/Train.js';
 
-const { renderer, scene, camera, updateDayNight } = createScene();
+const {
+  renderer,
+  scene,
+  camera,
+  updateDayNight
+} = createScene();
 
 const track = createTrack(scene);
 
-const models = createModels(scene, track.samples);
-
-const updateTrafficTrain = createTrafficTrain(scene, track);
-
-const updateTrafficCar = createTrafficCar(
+const models = createModels(
   scene,
-  track,
-  updateTrafficTrain.getHitboxes,
-  track.getRailwaySignalStates
+  track.samples
 );
+
+const updateTrafficTrain =
+  createTrafficTrain(
+    scene,
+    track
+  );
+
+const updateTrafficCar =
+  createTrafficCar(
+    scene,
+    track,
+    updateTrafficTrain.getHitboxes,
+    track.getRailwaySignalStates
+  );
 
 const bike = buildBike();
 
 scene.add(bike.group);
 
-const updateCamera = createCameraController(camera, state);
-const buildingEditor = createBuildingEditor(
-  scene,
-  models.buildings,
-  updateCamera,
-  () => document.getElementById('introOverlay').classList.remove('hidden')
-);
+const updateCamera =
+  createCameraController(
+    camera,
+    state
+  );
+
+const buildingEditor =
+  createBuildingEditor(
+    scene,
+    models.buildings,
+    updateCamera,
+    () =>
+      document
+        .getElementById('introOverlay')
+        .classList.remove('hidden')
+  );
 
 const ui = createUI(
   () => {
     updateCamera.requestLock();
   },
+
   () => {
     updateCamera.releaseLock();
   },
-  () => buildingEditor.activate(),
+
   () => {
-    // TODO: aqui entra o carregamento/transição para a Fase 2,
-    // quando ela existir. Por enquanto só um placeholder — o botão
-    // só chega a chamar isto quando a Fase 1 foi concluída sem
-    // nenhuma infração (ver ui.js -> finishRace).
-    console.log('Fase 2 liberada — implementar aqui.');
+    buildingEditor.activate();
+  },
+
+  () => {
+    console.log(
+      'Fase 2 liberada — implementar aqui.'
+    );
   }
 );
 
-window.addEventListener('shadowsChanged', event => {
-  renderer.shadowMap.enabled = event.detail;
-});
 
-const updateCoordinates = createCoordinates(scene);
+/* =========================================================
+   CONFIGURAÇÕES
+========================================================= */
 
-setupControls(ui.startRace);
-
-const drawMinimap = createMinimap(
-  track.samples,
-  updateTrafficTrain.getMinimapState
+window.addEventListener(
+  'shadowsChanged',
+  event => {
+    renderer.shadowMap.enabled =
+      event.detail;
+  }
 );
 
-const clock = new THREE.Clock();
 
-const stage = document.getElementById('stage');
+/* =========================================================
+   PAUSA
+========================================================= */
+
+window.addEventListener(
+  'pauseChanged',
+  event => {
+    if (event.detail) {
+      /*
+       * Entrou em pausa:
+       * tira o controle do mouse da câmera.
+       */
+      updateCamera.releaseLock();
+    } else {
+      /*
+       * Saiu da pausa:
+       * devolve o controle do mouse.
+       */
+      updateCamera.requestLock();
+    }
+  }
+);
+
+
+/* =========================================================
+   CONTROLES
+========================================================= */
+
+const updateCoordinates =
+  createCoordinates(scene);
+
+/*
+ * IMPORTANTE:
+ * O segundo argumento é o togglePause.
+ *
+ * P -> ui.togglePause()
+ */
+setupControls(
+  ui.startRace,
+  ui.togglePause
+);
+
+
+/* =========================================================
+   MINIMAPA
+========================================================= */
+
+const drawMinimap =
+  createMinimap(
+    track.samples,
+    updateTrafficTrain.getMinimapState
+  );
+
+
+/* =========================================================
+   RELÓGIO
+========================================================= */
+
+const clock =
+  new THREE.Clock();
+
+
+/* =========================================================
+   ELEMENTOS
+========================================================= */
+
+const stage =
+  document.getElementById('stage');
+
+
+/* =========================================================
+   ESTADO INTERNO
+========================================================= */
 
 let previousViolation = null;
-let lastDayNightTick = performance.now();
+
+let lastDayNightTick =
+  performance.now();
+
+
+/* =========================================================
+   MODOS DE PILOTAGEM
+========================================================= */
 
 const drivingModes = {
   eco: {
@@ -100,23 +203,38 @@ if (!state.drivingMode) {
 }
 
 state.maxSpeed =
-  drivingModes[state.drivingMode].maxSpeed;
+  drivingModes[
+    state.drivingMode
+  ].maxSpeed;
 
-function updateDrivingModeDisplay(animate = false) {
+
+function updateDrivingModeDisplay(
+  animate = false
+) {
   const modeElement =
-    document.getElementById('drivingMode');
+    document.getElementById(
+      'drivingMode'
+    );
 
-  if (!modeElement) return;
+  if (!modeElement) {
+    return;
+  }
 
   const mode =
-    drivingModes[state.drivingMode];
+    drivingModes[
+      state.drivingMode
+    ];
 
-  if (!mode) return;
+  if (!mode) {
+    return;
+  }
 
   modeElement.textContent =
     mode.name;
 
-  if (!animate) return;
+  if (!animate) {
+    return;
+  }
 
   modeElement.classList.remove(
     'mode-changing'
@@ -135,23 +253,35 @@ function updateDrivingModeDisplay(animate = false) {
   }, 450);
 }
 
+
 window.addEventListener(
   'drivingModeChanged',
   event => {
-    const mode = event.detail;
+    const mode =
+      event.detail;
 
-    if (!drivingModes[mode]) return;
+    if (!drivingModes[mode]) {
+      return;
+    }
 
-    state.drivingMode = mode;
+    state.drivingMode =
+      mode;
 
     state.maxSpeed =
       drivingModes[mode].maxSpeed;
 
-    updateDrivingModeDisplay(true);
+    updateDrivingModeDisplay(
+      true
+    );
   }
 );
 
 updateDrivingModeDisplay();
+
+
+/* =========================================================
+   COLISÕES
+========================================================= */
 
 function checkTrafficCollisions() {
   const hitboxes = [
@@ -161,161 +291,207 @@ function checkTrafficCollisions() {
 
   const bikeRadius = 1.4;
 
-  return hitboxes.map(hitbox => {
-    let dx = state.x - hitbox.x;
-    let dz = state.z - hitbox.z;
-    let collisionDistance;
+  return hitboxes
+    .map(hitbox => {
+      let dx =
+        state.x - hitbox.x;
 
-    if (
-      hitbox.halfWidth &&
-      hitbox.halfLength
-    ) {
-      const cos =
-        Math.cos(hitbox.heading);
+      let dz =
+        state.z - hitbox.z;
 
-      const sin =
-        Math.sin(hitbox.heading);
+      let collisionDistance;
 
-      const localX =
-        dx * cos - dz * sin;
+      if (
+        hitbox.halfWidth &&
+        hitbox.halfLength
+      ) {
+        const cos =
+          Math.cos(
+            hitbox.heading
+          );
 
-      const localZ =
-        dx * sin + dz * cos;
+        const sin =
+          Math.sin(
+            hitbox.heading
+          );
 
-      const closestX =
-        Math.max(
-          -hitbox.halfWidth,
-          Math.min(
-            hitbox.halfWidth,
-            localX
-          )
-        );
+        const localX =
+          dx * cos -
+          dz * sin;
 
-      const closestZ =
-        Math.max(
-          -hitbox.halfLength,
-          Math.min(
-            hitbox.halfLength,
-            localZ
-          )
-        );
+        const localZ =
+          dx * sin +
+          dz * cos;
 
-      const closestWorldX =
-        hitbox.x +
-        closestX * cos +
-        closestZ * sin;
+        const closestX =
+          Math.max(
+            -hitbox.halfWidth,
+            Math.min(
+              hitbox.halfWidth,
+              localX
+            )
+          );
 
-      const closestWorldZ =
-        hitbox.z -
-        closestX * sin +
-        closestZ * cos;
+        const closestZ =
+          Math.max(
+            -hitbox.halfLength,
+            Math.min(
+              hitbox.halfLength,
+              localZ
+            )
+          );
 
-      dx =
-        state.x - closestWorldX;
+        const closestWorldX =
+          hitbox.x +
+          closestX * cos +
+          closestZ * sin;
 
-      dz =
-        state.z - closestWorldZ;
+        const closestWorldZ =
+          hitbox.z -
+          closestX * sin +
+          closestZ * cos;
 
-      collisionDistance =
-        Math.hypot(dx, dz);
+        dx =
+          state.x -
+          closestWorldX;
 
-      if (collisionDistance < .001) {
-        const distanceToSide =
-          hitbox.halfWidth -
-          Math.abs(localX);
+        dz =
+          state.z -
+          closestWorldZ;
 
-        const distanceToEnd =
-          hitbox.halfLength -
-          Math.abs(localZ);
+        collisionDistance =
+          Math.hypot(
+            dx,
+            dz
+          );
 
         if (
-          distanceToSide <
-          distanceToEnd
+          collisionDistance <
+          0.001
         ) {
-          const side =
-            Math.sign(localX) || 1;
+          const distanceToSide =
+            hitbox.halfWidth -
+            Math.abs(localX);
 
-          dx =
-            side * cos;
+          const distanceToEnd =
+            hitbox.halfLength -
+            Math.abs(localZ);
 
-          dz =
-            -side * sin;
-        } else {
-          const side =
-            Math.sign(localZ) || 1;
+          if (
+            distanceToSide <
+            distanceToEnd
+          ) {
+            const side =
+              Math.sign(localX) ||
+              1;
 
-          dx =
-            side * sin;
+            dx =
+              side * cos;
 
-          dz =
-            side * cos;
+            dz =
+              -side * sin;
+          } else {
+            const side =
+              Math.sign(localZ) ||
+              1;
+
+            dx =
+              side * sin;
+
+            dz =
+              side * cos;
+          }
+
+          collisionDistance =
+            0;
         }
-
-        collisionDistance = 0;
+      } else {
+        collisionDistance =
+          Math.hypot(
+            dx,
+            dz
+          );
       }
-    } else {
-      collisionDistance =
-        Math.hypot(dx, dz);
-    }
 
-    const overlap =
-      hitbox.halfWidth &&
-      hitbox.halfLength
-        ? bikeRadius -
-          collisionDistance
-        : bikeRadius +
-          hitbox.radius -
-          collisionDistance;
+      const overlap =
+        hitbox.halfWidth &&
+        hitbox.halfLength
+          ? bikeRadius -
+            collisionDistance
+          : bikeRadius +
+            hitbox.radius -
+            collisionDistance;
 
-    return {
-      ...hitbox,
-      dx,
-      dz,
-      distance: collisionDistance,
-      overlap
-    };
-  }).find(
-    collision =>
-      collision.overlap >= 0
-  ) || null;
+      return {
+        ...hitbox,
+        dx,
+        dz,
+        distance:
+          collisionDistance,
+        overlap
+      };
+    })
+    .find(
+      collision =>
+        collision.overlap >= 0
+    ) || null;
 }
+
 
 function resolveTrafficCollision(
   collision
 ) {
-  let normalX = collision.dx;
-  let normalZ = collision.dz;
+  let normalX =
+    collision.dx;
+
+  let normalZ =
+    collision.dz;
 
   const distance =
     collision.distance || 1;
 
-  if (collision.distance < .001) {
+  if (
+    collision.distance <
+    0.001
+  ) {
     const normalLength =
       Math.hypot(
         normalX,
         normalZ
       );
 
-    if (normalLength > .001) {
-      normalX /= normalLength;
-      normalZ /= normalLength;
+    if (
+      normalLength > 0.001
+    ) {
+      normalX /=
+        normalLength;
+
+      normalZ /=
+        normalLength;
     } else {
       normalX =
-        -Math.sin(state.heading);
+        -Math.sin(
+          state.heading
+        );
 
       normalZ =
-        -Math.cos(state.heading);
+        -Math.cos(
+          state.heading
+        );
     }
   } else {
-    normalX /= distance;
-    normalZ /= distance;
+    normalX /=
+      distance;
+
+    normalZ /=
+      distance;
   }
 
   const separation =
     Math.max(
       collision.overlap,
       0
-    ) + .15;
+    ) + 0.15;
 
   state.x +=
     normalX * separation;
@@ -328,7 +504,9 @@ function resolveTrafficCollision(
       10,
       Math.max(
         3.5,
-        Math.abs(state.speed) * .55
+        Math.abs(
+          state.speed
+        ) * 0.55
       )
     );
 
@@ -342,40 +520,141 @@ function resolveTrafficCollision(
   );
 }
 
+
+/* =========================================================
+   LOOP PRINCIPAL
+========================================================= */
+
 function animate() {
-  requestAnimationFrame(animate);
+  requestAnimationFrame(
+    animate
+  );
+
+
+  /* -------------------------------------------------------
+     JOGO FORA DA TELA
+  ------------------------------------------------------- */
 
   if (
     stage.classList.contains(
       'game-hidden'
     )
   ) {
-    lastDayNightTick = performance.now();
+    /*
+     * Impede o relógio de acumular
+     * tempo enquanto o jogo está escondido.
+     */
+    lastDayNightTick =
+      performance.now();
+
     clock.getDelta();
+
     return;
   }
 
-  const now = performance.now();
-  updateDayNight((now - lastDayNightTick) / 1000);
-  lastDayNightTick = now;
-  bike.setHeadlightsEnabled(state.playerLightEnabled);
+
+  const now =
+    performance.now();
+
+
+  /* -------------------------------------------------------
+     PAUSA
+  ------------------------------------------------------- */
+
+  if (state.paused) {
+    /*
+     * Mantém o relógio zerado durante
+     * a pausa para que, ao voltar,
+     * não exista um dt enorme.
+     */
+    clock.getDelta();
+
+    lastDayNightTick =
+      now;
+
+    /*
+     * A interface continua funcionando,
+     * mas nada da simulação avança.
+     */
+    ui.update();
+
+    renderer.render(
+      scene,
+      camera
+    );
+
+    return;
+  }
+
+
+  /* -------------------------------------------------------
+     DIA / NOITE
+  ------------------------------------------------------- */
+
+  updateDayNight(
+    (now - lastDayNightTick) /
+      1000
+  );
+
+  lastDayNightTick =
+    now;
+
+
+  /* -------------------------------------------------------
+     FAROL
+  ------------------------------------------------------- */
+
+  bike.setHeadlightsEnabled(
+    state.playerLightEnabled
+  );
+
+
+  /* -------------------------------------------------------
+     DELTA TIME
+  ------------------------------------------------------- */
+
   const dt =
     Math.min(
       clock.getDelta(),
       0.05
     );
 
-  if (state.buildingEditorActive) {
+
+  /* -------------------------------------------------------
+     EDITOR DE PRÉDIOS
+  ------------------------------------------------------- */
+
+  if (
+    state.buildingEditorActive
+  ) {
     buildingEditor.update();
+
     updateCamera(dt);
+
     drawMinimap();
-    updateCoordinates(state);
+
+    updateCoordinates(
+      state
+    );
+
     ui.update();
-    renderer.render(scene, camera);
+
+    renderer.render(
+      scene,
+      camera
+    );
+
     return;
   }
 
-  if (!state.raceFinished) {
+
+  /* -------------------------------------------------------
+     FÍSICA DA MOTO
+  ------------------------------------------------------- */
+
+  if (
+    !state.raceFinished
+  ) {
     updatePhysics(
       dt,
       bike,
@@ -385,22 +664,44 @@ function animate() {
     );
   }
 
+
+  /* -------------------------------------------------------
+     TREM
+  ------------------------------------------------------- */
+
   updateTrafficTrain(dt);
 
   track.updateRailwaySignals(
     updateTrafficTrain.getSignalState()
   );
 
+
+  /* -------------------------------------------------------
+     CARROS
+  ------------------------------------------------------- */
+
   updateTrafficCar(dt);
+
+
+  /* -------------------------------------------------------
+     COLISÕES
+  ------------------------------------------------------- */
 
   const trafficCollision =
     checkTrafficCollisions();
 
-  if (trafficCollision) {
+  if (
+    trafficCollision
+  ) {
     resolveTrafficCollision(
       trafficCollision
     );
   }
+
+
+  /* -------------------------------------------------------
+     INFRAÇÕES
+  ------------------------------------------------------- */
 
   const currentViolation =
     trafficCollision?.type ||
@@ -413,6 +714,7 @@ function animate() {
             : null
         )
     );
+
 
   if (
     currentViolation &&
@@ -433,7 +735,8 @@ function animate() {
       currentViolation;
 
     state.alertUntil =
-      performance.now() + 10000;
+      performance.now() +
+      10000;
 
     const alertNow =
       performance.now();
@@ -448,31 +751,66 @@ function animate() {
       );
 
     state.lawAlerts.push({
-      type: currentViolation,
+      type:
+        currentViolation,
+
       expiresAt:
         alertNow + 5000
     });
   }
 
-  if (currentViolation) {
-    state.lawBroken = true;
+
+  if (
+    currentViolation
+  ) {
+    state.lawBroken =
+      true;
   }
+
 
   previousViolation =
     currentViolation;
 
+
+  /* -------------------------------------------------------
+     CÂMERA
+  ------------------------------------------------------- */
+
   updateCamera(dt);
+
+
+  /* -------------------------------------------------------
+     MINIMAPA
+  ------------------------------------------------------- */
 
   drawMinimap();
 
-  updateCoordinates(state);
+
+  /* -------------------------------------------------------
+     COORDENADAS
+  ------------------------------------------------------- */
+
+  updateCoordinates(
+    state
+  );
+
+
+  /* -------------------------------------------------------
+     INTERFACE
+  ------------------------------------------------------- */
 
   ui.update();
+
+
+  /* -------------------------------------------------------
+     RENDERIZAÇÃO
+  ------------------------------------------------------- */
 
   renderer.render(
     scene,
     camera
   );
 }
+
 
 animate();

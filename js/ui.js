@@ -51,6 +51,22 @@ export function createUI(
   const invertCamera =
     document.getElementById('invertCamera');
 
+  /*
+    ELEMENTOS DA PAUSA
+  */
+
+  const pauseMenu =
+    document.getElementById('pauseMenu');
+
+  const continueBtn =
+    document.getElementById('continueBtn');
+
+  const menuBtn =
+    document.getElementById('menuBtn');
+
+  const restartPauseBtn =
+    document.getElementById('restartPauseBtn');
+
   const gameElements =
     document.querySelectorAll('.game-element');
 
@@ -58,9 +74,11 @@ export function createUI(
     first: document.getElementById(
       'achievement-first'
     ),
+
     speed: document.getElementById(
       'achievement-speed'
     ),
+
     clean: document.getElementById(
       'achievement-clean'
     )
@@ -84,6 +102,10 @@ export function createUI(
         achievementStorageKey
       ) || '{}'
     );
+
+  /*
+    MODO DE PILOTAGEM
+  */
 
   function updateDrivingMode(
     animate = false
@@ -120,10 +142,16 @@ export function createUI(
     }, 450);
   }
 
+  /*
+    CONQUISTAS
+  */
+
   function renderAchievements() {
     Object.entries(
       achievementElements
     ).forEach(([id, element]) => {
+      if (!element) return;
+
       const unlocked =
         Boolean(
           unlockedAchievements[id]
@@ -134,22 +162,30 @@ export function createUI(
         unlocked
       );
 
-      element
-        .querySelector(
+      const icon =
+        element.querySelector(
           '.achievement-icon'
-        )
-        .textContent =
-        unlocked ? '✅' : '🔒';
+        );
+
+      if (icon) {
+        icon.textContent =
+          unlocked
+            ? '✅'
+            : '🔒';
+      }
     });
   }
 
   function unlockAchievements() {
     unlockedAchievements = {
       ...unlockedAchievements,
+
       first: true,
+
       speed:
         unlockedAchievements.speed ||
         state.elapsed < 84,
+
       clean:
         unlockedAchievements.clean ||
         !state.lawBroken
@@ -168,6 +204,10 @@ export function createUI(
   renderAchievements();
 
   updateDrivingMode();
+
+  /*
+    ALERTAS DE INFRAÇÃO
+  */
 
   function getLawAlert(type) {
     const alerts = {
@@ -203,63 +243,232 @@ export function createUI(
     return alerts[type];
   }
 
-  shadowsToggle.checked =
-    localStorage.getItem(
-      'shadowsEnabled'
-    ) !== 'false';
+  /*
+    CONFIGURAÇÃO DE SOMBRAS
+  */
 
-  shadowsToggle.addEventListener(
-    'change',
-    () => {
-      localStorage.setItem(
-        'shadowsEnabled',
-        String(
-          shadowsToggle.checked
-        )
+  if (shadowsToggle) {
+    shadowsToggle.checked =
+      localStorage.getItem(
+        'shadowsEnabled'
+      ) !== 'false';
+
+    shadowsToggle.addEventListener(
+      'change',
+      () => {
+        localStorage.setItem(
+          'shadowsEnabled',
+          String(
+            shadowsToggle.checked
+          )
+        );
+
+        window.dispatchEvent(
+          new CustomEvent(
+            'shadowsChanged',
+            {
+              detail:
+                shadowsToggle.checked
+            }
+          )
+        );
+      }
+    );
+  }
+
+  /*
+    CÂMERA INVERTIDA
+  */
+
+  const savedCameraInvert =
+    localStorage.getItem(
+      'cameraInvertY'
+    ) === 'true';
+
+  if (invertCamera) {
+    invertCamera.checked =
+      savedCameraInvert;
+  }
+
+  state.cameraInvertY =
+    savedCameraInvert;
+
+  if (invertCamera) {
+    invertCamera.addEventListener(
+      'change',
+      () => {
+        state.cameraInvertY =
+          invertCamera.checked;
+
+        localStorage.setItem(
+          'cameraInvertY',
+          String(
+            invertCamera.checked
+          )
+        );
+      }
+    );
+  }
+
+  /*
+    PAUSA
+  */
+
+  function showPanel(panelId) {
+    const panel =
+      document.getElementById(
+        panelId
       );
+
+    if (!panel) {
+      console.warn(
+        `Painel não encontrado: ${panelId}`
+      );
+      return;
+    }
+
+    document
+      .querySelectorAll('.overlay')
+      .forEach(panelElement => {
+        panelElement.classList.add(
+          'hidden'
+        );
+      });
+
+    panel.classList.remove(
+      'hidden'
+    );
+  }
+
+  function setPaused(paused) {
+    /*
+      A pausa só funciona durante
+      uma corrida ativa.
+    */
+
+    if (!state.raceStarted) {
+      return;
+    }
+
+    if (state.raceFinished) {
+      return;
+    }
+
+    /*
+      PAUSAR
+    */
+
+    if (paused) {
+      if (state.paused) {
+        return;
+      }
+
+      state.paused = true;
+
+      state.pauseStarted =
+        performance.now();
+
+      /*
+        Informa o main.js que o jogo
+        entrou em pausa.
+      */
 
       window.dispatchEvent(
         new CustomEvent(
-          'shadowsChanged',
+          'pauseChanged',
           {
-            detail:
-              shadowsToggle.checked
+            detail: true
           }
         )
       );
+
+      /*
+        Mostra o menu de pausa.
+      */
+
+      if (pauseMenu) {
+        showPanel('pauseMenu');
+      }
+
+      return;
     }
-  );
 
-  function showPanel(panelId) {
-    document
-      .querySelectorAll('.overlay')
-      .forEach(panel =>
-        panel.classList.add('hidden')
+    /*
+      CONTINUAR
+    */
+
+    if (state.pauseStarted) {
+      state.startTime +=
+        performance.now() -
+        state.pauseStarted;
+    }
+
+    state.pauseStarted = 0;
+
+    state.paused = false;
+
+    /*
+      Informa o main.js que o jogo
+      voltou a funcionar.
+    */
+
+    window.dispatchEvent(
+      new CustomEvent(
+        'pauseChanged',
+        {
+          detail: false
+        }
+      )
+    );
+
+    if (pauseMenu) {
+      pauseMenu.classList.add(
+        'hidden'
       );
-
-    document
-      .getElementById(panelId)
-      .classList.remove('hidden');
+    }
   }
 
+  function togglePause() {
+    if (
+      !state.raceStarted ||
+      state.raceFinished
+    ) {
+      return;
+    }
+
+    setPaused(
+      !state.paused
+    );
+  }
+
+  /*
+    LOADING
+  */
+
   let lastUpdate = 0;
+
   let gameVisible = false;
+
   let loadingTipTimer;
 
   const loadingTips = [
     'Se você entrar e o jogo não tiver carregado, não se mexa.',
     'Para andar, use as setas ou W A S D.',
     'Aperte F3 para ver as coordenadas.',
-    'Aperte M durante a corrida para mudar o modo.'
+    'Aperte M durante a corrida para mudar o modo.',
+    'Aperte P durante a corrida para pausar.'
   ];
 
   function showRandomLoadingTip() {
+    if (!loadingTipElement) return;
+
     const currentTip =
       loadingTipElement.textContent;
 
     const availableTips =
       loadingTips.filter(
-        tip => tip !== currentTip
+        tip =>
+          tip !== currentTip
       );
 
     loadingTipElement.textContent =
@@ -270,6 +479,10 @@ export function createUI(
         )
       ];
   }
+
+  /*
+    INICIAR CORRIDA
+  */
 
   function startRace() {
     if (
@@ -286,15 +499,29 @@ export function createUI(
 
     state.raceStarted = true;
 
+    state.raceFinished = false;
+
+    state.paused = false;
+
+    state.pauseStarted = 0;
+
     state.startTime =
       performance.now();
 
-    introOverlay.classList.add(
-      'hidden'
-    );
+    state.elapsed = 0;
+
+    if (introOverlay) {
+      introOverlay.classList.add(
+        'hidden'
+      );
+    }
 
     onRaceStart?.();
   }
+
+  /*
+    MOSTRAR JOGO
+  */
 
   function showGame() {
     gameElements.forEach(
@@ -306,15 +533,25 @@ export function createUI(
 
     gameVisible = true;
 
-    introOverlay.classList.remove(
-      'hidden'
-    );
+    if (introOverlay) {
+      introOverlay.classList.remove(
+        'hidden'
+      );
+    }
 
     updateDrivingMode();
   }
 
+  /*
+    FINALIZAR CORRIDA
+  */
+
   function finishRace() {
     state.raceFinished = true;
+
+    state.paused = false;
+
+    state.pauseStarted = 0;
 
     state.elapsed =
       (
@@ -326,94 +563,115 @@ export function createUI(
 
     unlockAchievements();
 
-    finishTimeElement.textContent =
-      `${state.elapsed.toFixed(1)}s`;
-
-    violationHistoryElement.replaceChildren();
-
-    const lawHistory =
-      state.lawHistory || [];
-
-    if (lawHistory.length === 0) {
-      const cleanMessage =
-        document.createElement('p');
-
-      cleanMessage.className =
-        'clean-race';
-
-      cleanMessage.textContent =
-        'Nenhuma infração registrada.';
-
-      violationHistoryElement.appendChild(
-        cleanMessage
-      );
-    } else {
-      lawHistory.forEach(type => {
-        const copy =
-          getLawAlert(type);
-
-        if (!copy) return;
-
-        const item =
-          document.createElement('div');
-
-        item.className =
-          `violation-item ${copy[3]}`;
-
-        item.textContent =
-          copy[1];
-
-        violationHistoryElement.appendChild(
-          item
-        );
-      });
+    if (finishTimeElement) {
+      finishTimeElement.textContent =
+        `${state.elapsed.toFixed(1)}s`;
     }
 
-    /*
-       Libera o botão da Fase 2 somente quando a corrida
-       terminou sem nenhuma infração registrada (state.lawHistory
-       vazio). Enquanto não for o caso, o botão permanece com o
-       atributo "disabled" — o navegador já impede o clique
-       sozinho, então não precisa checar isso de novo no listener.
-    */
+    if (violationHistoryElement) {
+      violationHistoryElement.replaceChildren();
 
-    const cleanRun =
-      lawHistory.length === 0;
+      const lawHistory =
+        state.lawHistory || [];
 
-    phase2Btn.disabled = !cleanRun;
+      if (lawHistory.length === 0) {
+        const cleanMessage =
+          document.createElement(
+            'p'
+          );
 
-    phase2Btn.classList.toggle(
-      'locked',
-      !cleanRun
-    );
+        cleanMessage.className =
+          'clean-race';
 
-    phase2Note.textContent =
-      cleanRun
-        ? 'Fase 2 liberada! Bom trabalho, nenhuma infração.'
-        : 'Você cometeu infrações nesta tentativa. Corra de novo sem infrações para liberar a Fase 2.';
+        cleanMessage.textContent =
+          'Nenhuma infração registrada.';
 
-    phase2Note.classList.toggle(
-      'note-ok',
-      cleanRun
-    );
+        violationHistoryElement.appendChild(
+          cleanMessage
+        );
+      } else {
+        lawHistory.forEach(
+          type => {
+            const copy =
+              getLawAlert(type);
 
-    finishOverlay.classList.remove(
-      'hidden'
-    );
+            if (!copy) return;
+
+            const item =
+              document.createElement(
+                'div'
+              );
+
+            item.className =
+              `violation-item ${copy[3]}`;
+
+            item.textContent =
+              copy[1];
+
+            violationHistoryElement.appendChild(
+              item
+            );
+          }
+        );
+      }
+
+      const cleanRun =
+        lawHistory.length === 0;
+
+      if (phase2Btn) {
+        phase2Btn.disabled =
+          !cleanRun;
+
+        phase2Btn.classList.toggle(
+          'locked',
+          !cleanRun
+        );
+      }
+
+      if (phase2Note) {
+        phase2Note.textContent =
+          cleanRun
+            ? 'Fase 2 liberada! Bom trabalho, nenhuma infração.'
+            : 'Você cometeu infrações nesta tentativa. Corra de novo sem infrações para liberar a Fase 2.';
+
+        phase2Note.classList.toggle(
+          'note-ok',
+          cleanRun
+        );
+      }
+    }
+
+    if (finishOverlay) {
+      finishOverlay.classList.remove(
+        'hidden'
+      );
+    }
   }
 
-  document
-    .getElementById('playBtn')
-    .addEventListener(
+  /*
+    BOTÃO JOGAR
+  */
+
+  const playBtn =
+    document.getElementById(
+      'playBtn'
+    );
+
+  if (playBtn) {
+    playBtn.addEventListener(
       'click',
       () => {
-        mainMenu.classList.add(
-          'hidden'
-        );
+        if (mainMenu) {
+          mainMenu.classList.add(
+            'hidden'
+          );
+        }
 
-        loadingOverlay.classList.remove(
-          'hidden'
-        );
+        if (loadingOverlay) {
+          loadingOverlay.classList.remove(
+            'hidden'
+          );
+        }
 
         showRandomLoadingTip();
 
@@ -423,86 +681,261 @@ export function createUI(
             6000
           );
 
-        window.setTimeout(
-          () => {
-            window.clearInterval(
-              loadingTipTimer
-            );
+        window.setTimeout(() => {
+          window.clearInterval(
+            loadingTipTimer
+          );
 
+          if (loadingOverlay) {
             loadingOverlay.classList.add(
               'hidden'
             );
+          }
 
-            showGame();
-          },
-          15000
-        );
+          showGame();
+        }, 15000);
       }
     );
+  }
 
-  document
-    .getElementById('editBuildingsBtn')
-    .addEventListener('click', () => {
-      mainMenu.classList.add('hidden');
-      showGame();
-      introOverlay.classList.add('hidden');
-      onBuildingEditorStart?.();
-    });
+  /*
+    EDITAR PRÉDIOS
+  */
 
-  document
-    .getElementById('startBtn')
-    .addEventListener(
+  const editBuildingsBtn =
+    document.getElementById(
+      'editBuildingsBtn'
+    );
+
+  if (editBuildingsBtn) {
+    editBuildingsBtn.addEventListener(
+      'click',
+      () => {
+        if (mainMenu) {
+          mainMenu.classList.add(
+            'hidden'
+          );
+        }
+
+        showGame();
+
+        if (introOverlay) {
+          introOverlay.classList.add(
+            'hidden'
+          );
+        }
+
+        onBuildingEditorStart?.();
+      }
+    );
+  }
+
+  /*
+    COMEÇAR CORRIDA
+  */
+
+  const startBtn =
+    document.getElementById(
+      'startBtn'
+    );
+
+  if (startBtn) {
+    startBtn.addEventListener(
       'click',
       startRace
     );
+  }
 
-  document
-    .querySelectorAll('[data-panel]')
-    .forEach(button => {
-      button.addEventListener(
-        'click',
-        () =>
-          showPanel(
-            button.dataset.panel
-          )
-      );
-    });
+  /*
+    CONTINUAR DA PAUSA
+  */
 
-  document
-    .querySelectorAll('.backBtn')
-    .forEach(button => {
-      button.addEventListener(
-        'click',
-        () =>
-          showPanel('mainMenu')
-      );
-    });
-
-  document
-    .getElementById('restartBtn')
-    .addEventListener(
-      'click',
-      () => location.reload()
-    );
-
-  document
-    .getElementById('phase2Btn')
-    .addEventListener(
+  if (continueBtn) {
+    continueBtn.addEventListener(
       'click',
       () => {
+        setPaused(false);
+      }
+    );
+  }
+
+  /*
+    VOLTAR AO MENU
+  */
+
+  if (menuBtn) {
+    menuBtn.addEventListener(
+      'click',
+      () => {
+        location.reload();
+      }
+    );
+  }
+
+  /*
+    REINICIAR PELA PAUSA
+  */
+
+  if (restartPauseBtn) {
+    restartPauseBtn.addEventListener(
+      'click',
+      () => {
+        location.replace(
+          `${location.pathname}?restart=1`
+        );
+      }
+    );
+  }
+
+  /*
+    PAINÉIS DO MENU
+  */
+
+  document
+    .querySelectorAll(
+      '[data-panel]'
+    )
+    .forEach(button => {
+      button.addEventListener(
+        'click',
+        () => {
+          showPanel(
+            button.dataset.panel
+          );
+        }
+      );
+    });
+
+  /*
+    BOTÕES VOLTAR
+  */
+
+  document
+    .querySelectorAll(
+      '.backBtn'
+    )
+    .forEach(button => {
+      button.addEventListener(
+        'click',
+        () => {
+          showPanel(
+            state.paused
+              ? 'pauseMenu'
+              : 'mainMenu'
+          );
+        }
+      );
+    });
+
+  /*
+    CORRER DE NOVO
+  */
+
+  const restartBtn =
+    document.getElementById(
+      'restartBtn'
+    );
+
+  if (restartBtn) {
+    restartBtn.addEventListener(
+      'click',
+      () => {
+        location.reload();
+      }
+    );
+  }
+
+  /*
+    FASE 2
+  */
+
+  if (phase2Btn) {
+    phase2Btn.addEventListener(
+      'click',
+      () => {
+        if (phase2Btn.disabled) {
+          return;
+        }
+
         onPhase2Start?.();
       }
     );
+  }
+
+  /*
+    RETOMAR AUTOMATICAMENTE APÓS
+    ?restart=1
+  */
+
+  if (
+    new URLSearchParams(
+      location.search
+    ).get('restart') === '1'
+  ) {
+    if (mainMenu) {
+      mainMenu.classList.add(
+        'hidden'
+      );
+    }
+
+    if (loadingOverlay) {
+      loadingOverlay.classList.remove(
+        'hidden'
+      );
+    }
+
+    showRandomLoadingTip();
+
+    loadingTipTimer =
+      window.setInterval(
+        showRandomLoadingTip,
+        6000
+      );
+
+    window.setTimeout(() => {
+      window.clearInterval(
+        loadingTipTimer
+      );
+
+      if (loadingOverlay) {
+        loadingOverlay.classList.add(
+          'hidden'
+        );
+      }
+
+      showGame();
+
+      if (introOverlay) {
+        introOverlay.classList.add(
+          'hidden'
+        );
+      }
+
+      startRace();
+    }, 15000);
+  }
+
+  /*
+    RETORNO DA UI
+  */
 
   return {
     startRace,
 
+    togglePause,
+
     finishRace,
 
     update() {
+      /*
+        O cronômetro para enquanto
+        o jogo está pausado.
+      */
+
       if (
         state.raceStarted &&
-        !state.raceFinished
+        !state.raceFinished &&
+        !state.paused
       ) {
         state.elapsed =
           (
@@ -510,6 +943,10 @@ export function createUI(
             state.startTime
           ) / 1000;
       }
+
+      /*
+        Atualiza o modo de pilotagem.
+      */
 
       if (
         state.drivingMode !==
@@ -532,13 +969,21 @@ export function createUI(
 
       lastUpdate = now;
 
-      speedElement.textContent =
-        Math.round(
-          Math.abs(state.speed)
-        );
+      if (speedElement) {
+        speedElement.textContent =
+          Math.round(
+            Math.abs(state.speed)
+          );
+      }
 
-      timerElement.textContent =
-        `${state.elapsed.toFixed(1)}s`;
+      if (timerElement) {
+        timerElement.textContent =
+          `${state.elapsed.toFixed(1)}s`;
+      }
+
+      /*
+        ALERTAS DE TRÂNSITO
+      */
 
       const alertNow =
         performance.now();
@@ -550,36 +995,40 @@ export function createUI(
             alertNow
         );
 
-      trafficStatus.replaceChildren();
+      if (trafficStatus) {
+        trafficStatus.replaceChildren();
 
-      trafficStatus.classList.toggle(
-        'hidden',
-        state.lawAlerts.length === 0
-      );
+        trafficStatus.classList.toggle(
+          'hidden',
+          state.lawAlerts.length === 0
+        );
 
-      state.lawAlerts.forEach(
-        alert => {
-          const copy =
-            getLawAlert(alert.type);
+        state.lawAlerts.forEach(
+          alert => {
+            const copy =
+              getLawAlert(
+                alert.type
+              );
 
-          if (!copy) return;
+            if (!copy) return;
 
-          const card =
-            document.createElement(
-              'div'
+            const card =
+              document.createElement(
+                'div'
+              );
+
+            card.className =
+              `traffic-alert ${copy[3]}`;
+
+            card.innerHTML =
+              `<span class="traffic-status-label">${copy[0]}</span><strong>${copy[1]}</strong><p>${copy[2]}</p>`;
+
+            trafficStatus.appendChild(
+              card
             );
-
-          card.className =
-            `traffic-alert ${copy[3]}`;
-
-          card.innerHTML =
-            `<span class="traffic-status-label">${copy[0]}</span><strong>${copy[1]}</strong><p>${copy[2]}</p>`;
-
-          trafficStatus.appendChild(
-            card
-          );
-        }
-      );
+          }
+        );
+      }
     }
   };
 }

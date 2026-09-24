@@ -1,18 +1,13 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-
     <title>ROTA ZERO — Corrida de Moto</title>
-
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/midia.css">
 </head>
-
 <body>
-
     <div id="stage" class="game-element game-hidden">
         <canvas id="three-canvas"></canvas>
     </div>
@@ -35,8 +30,7 @@
     <div id="traffic-status" class="traffic-status hidden game-element game-hidden"></div>
 
     <div class="hud game-element game-hidden" id="timerbox">
-        TEMPO
-        <b id="timerval">00.0s</b>
+        TEMPO <b id="timerval">00.0s</b>
     </div>
 
     <div class="hud game-element game-hidden" id="coordinates">
@@ -44,325 +38,150 @@
     </div>
 
     <div class="hud game-element game-hidden" id="speedbox">
-
         <div class="speed-main">
             <span id="speedval">0</span>
             <span id="speedunit">km/h</span>
         </div>
-
         <div id="driving-mode">
             <span id="mode-label">COMFORT</span>
             <span id="mode-key">M • ALTERAR MODO</span>
         </div>
-
     </div>
-
 
     <div class="overlay main-menu" id="mainMenu">
-
         <div class="menu-card">
-
-            <div class="menu-kicker">
-                CORRIDA DE MOTO
-            </div>
-
+            <div class="menu-kicker">CORRIDA DE MOTO</div>
             <h1>ROTA ZERO</h1>
-
-            <p class="menu-subtitle">
-                Escolha uma opção
-            </p>
-
+            <p class="menu-subtitle">Escolha uma opção</p>
             <div class="menu-buttons">
-
-                <button class="menu-btn primary" id="playBtn">
-                    JOGAR
-                </button>
-
-                <button class="menu-btn" id="editBuildingsBtn">
-                    EDITAR PRÉDIOS
-                </button>
-
-                <button class="menu-btn" data-panel="settingsPanel">
-                    CONFIGURAÇÃO
-                </button>
-
-                <button class="menu-btn" data-panel="extrasPanel">
-                    EXTRA
-                </button>
-
-                <button class="menu-btn" data-panel="achievementsPanel">
-                    CONQUISTAS
-                </button>
-
+                <button class="menu-btn primary" id="playBtn">JOGAR</button>
+                <button class="menu-btn" id="editBuildingsBtn">EDITAR PRÉDIOS</button>
+                <button class="menu-btn" data-panel="settingsPanel">CONFIGURAÇÃO</button>
+                <button class="menu-btn" data-panel="extrasPanel">EXTRA</button>
+                <button class="menu-btn" data-panel="achievementsPanel">CONQUISTAS</button>
             </div>
-
         </div>
-
     </div>
-
 
     <div class="overlay hidden loading-overlay" id="loadingOverlay">
-
         <div class="loading-content">
-
-            <div class="loading-title">
-                Loading<span class="loading-dots">
-                    <i>.</i>
-                    <i>.</i>
-                    <i>.</i>
-                </span>
-            </div>
-
-            <p>
-                Preparando o mapa...
-            </p>
-
+            <div class="loading-title">Loading<span class="loading-dots"><i>.</i><i>.</i><i>.</i></span></div>
+            <p>Preparando o mapa...</p>
             <p class="loading-tip" id="loadingTip"></p>
-
         </div>
-
     </div>
-
 
     <div class="overlay hidden" id="introOverlay">
-
         <div class="card">
-
             <h1>🏍 ROTA ZERO</h1>
-
-            <p>
-                Saia do ponto amarelo e chegue até a bandeira preta.
-                No meio do trajeto a estrada se divide em duas —
-                escolha seu caminho, ninguém vai te dizer qual é o melhor.
-            </p>
-
+            <p>Saia do ponto amarelo e chegue até a bandeira preta.
+               No meio do trajeto a estrada se divide em duas —
+               escolha seu caminho, ninguém vai te dizer qual é o melhor.</p>
             <div class="keys">
-
-                <div class="key">W</div>
-                <div class="key">A</div>
-                <div class="key">S</div>
-                <div class="key">D</div>
-
+                <div class="key">W</div><div class="key">A</div><div class="key">S</div><div class="key">D</div>
             </div>
-
-            <p style="margin-top:-8px;">
-                ou use as setas do teclado
-            </p>
-
-            <p style="margin-top:-8px;">
-                🖱️ Mova o mouse para controlar a câmera
-            </p>
-
-            <p class="mode-info">
-                ⚡ Durante a corrida, pressione <b>M</b>
-                para alternar entre os modos
-                <b>ECO</b>, <b>COMFORT</b> e <b>SPORT</b>.
-            </p>
-
-            <button class="btn" id="startBtn">
-                LIGAR MOTO
-            </button>
-
+            <p style="margin-top:-8px;">ou use as setas do teclado</p>
+            <p style="margin-top:-8px;">🖱️ Mova o mouse para controlar a câmera</p>
+            <p class="mode-info">⚡ Durante a corrida, pressione <b>M</b>
+                para alternar entre os modos <b>ECO</b>, <b>COMFORT</b> e <b>SPORT</b>.</p>
+            <button class="btn" id="startBtn">LIGAR MOTO</button>
         </div>
-
     </div>
 
+    <!-- MENU DE PAUSA -->
+    <div class="overlay hidden" id="pauseMenu">
+        <div class="card menu-panel">
+            <h1>PAUSA</h1>
+            <button class="btn" id="continueBtn">CONTINUAR</button>
+            <button class="btn" id="restartPauseBtn">REINICIAR</button>
+            <button class="btn" data-panel="settingsPanel">CONFIGURAÇÕES</button>
+            <button class="btn" id="menuBtn">MENU</button>
+        </div>
+    </div>
 
     <div class="overlay hidden" id="settingsPanel">
-
         <div class="card menu-panel">
-
             <h1>CONFIGURAÇÃO</h1>
-
-            <p>
-                Use WASD ou as setas do teclado para pilotar.
-            </p>
-
-            <p>
-                🖱️ Mova o mouse para controlar a câmera.
-            </p>
-
+            <p>Use WASD ou as setas do teclado para pilotar.</p>
+            <p>🖱️ Mova o mouse para controlar a câmera.</p>
             <label class="setting-row" for="shadowsToggle">
-
-                <span>
-                    Sombras do jogo
-                </span>
-
+                <span>Sombras do jogo</span>
                 <input type="checkbox" id="shadowsToggle" checked>
-
             </label>
-
-
             <label class="setting-row" for="invertCamera">
-
-                <span>
-                    Inverter câmera vertical
-                </span>
-
+                <span>Inverter câmera vertical</span>
                 <input type="checkbox" id="invertCamera">
-
             </label>
-
-
-            <p class="panel-note">
-                As opções de desempenho estão ajustadas para deixar o jogo mais leve.
-            </p>
-
-            <button class="btn backBtn">
-                VOLTAR
-            </button>
-
+            <p class="panel-note">As opções de desempenho estão ajustadas para deixar o jogo mais leve.</p>
+            <button class="btn backBtn">VOLTAR</button>
         </div>
-
     </div>
-
 
     <div class="overlay hidden" id="extrasPanel">
-
         <div class="card menu-panel">
-
             <h1>EXTRA</h1>
-
-            <p>
-                Descubra os dois caminhos da Rota Zero e tente bater o seu melhor tempo.
-            </p>
-
-            <button class="btn backBtn">
-                VOLTAR
-            </button>
-
+            <p>Descubra os dois caminhos da Rota Zero e tente bater o seu melhor tempo.</p>
+            <button class="btn backBtn">VOLTAR</button>
         </div>
-
     </div>
 
-
     <div class="overlay hidden" id="achievementsPanel">
-
         <div class="card menu-panel">
-
             <h1>CONQUISTAS</h1>
 
             <p class="achievement" id="achievement-first">
-
-                <span class="achievement-icon">
-                    🔒
-                </span>
-
-                Terminar o jogo 1 vez
-
-                <br>
-
-                <small>
-                    Complete a rota pela primeira vez.
-                </small>
-
+                <span class="achievement-icon">🔒</span>
+                Terminar o jogo 1 vez<br>
+                <small>Complete a rota pela primeira vez.</small>
             </p>
-
 
             <p class="achievement" id="achievement-speed">
-
-                <span class="achievement-icon">
-                    🔒
-                </span>
-
-                Terminar o jogo em menos de 84s
-
-                <br>
-
-                <small>
-                    Complete a rota em menos de 84 segundos.
-                </small>
-
+                <span class="achievement-icon">🔒</span>
+                Terminar o jogo em menos de 84s<br>
+                <small>Complete a rota em menos de 84 segundos.</small>
             </p>
-
 
             <p class="achievement" id="achievement-clean">
-
-                <span class="achievement-icon">
-                    🔒
-                </span>
-
-                Terminar o jogo sem quebrar nenhuma lei
-
-                <br>
-
-                <small>
-                    Chegue sem contramão, sem sair da estrada e sem colisões.
-                </small>
-
+                <span class="achievement-icon">🔒</span>
+                Terminar o jogo sem quebrar nenhuma lei<br>
+                <small>Chegue sem contramão, sem sair da estrada e sem colisões.</small>
             </p>
 
-
-            <button class="btn backBtn">
-                VOLTAR
-            </button>
-
+            <button class="btn backBtn">VOLTAR</button>
         </div>
-
     </div>
 
-
     <div class="overlay hidden" id="finishOverlay">
-
         <div class="card">
-
             <h1>🏁 CHEGADA!</h1>
 
-            <div id="finishTime">
-                00.0s
-            </div>
-
+            <div id="finishTime">00.0s</div>
 
             <div class="violation-history">
-
-                <h2>
-                    HISTÓRICO DE INFRAÇÕES
-                </h2>
-
+                <h2>HISTÓRICO DE INFRAÇÕES</h2>
                 <div id="violationHistory"></div>
-
             </div>
 
+            <p>Você completou a rota.
+               Quer tentar o outro caminho e ver se é mais rápido?</p>
 
-            <p>
-                Você completou a rota.
-                Quer tentar o outro caminho e ver se é mais rápido?
-            </p>
-
-
-            <button class="btn" id="phase2Btn" disabled>
-                PRÓXIMA FASE
-            </button>
+            <button class="btn" id="phase2Btn" disabled>PRÓXIMA FASE</button>
 
             <p class="panel-note" id="phase2Note">
                 Complete a rota sem infrações para liberar a Fase 2.
             </p>
 
-            <button class="btn" id="restartBtn">
-                CORRER DE NOVO
-            </button>
-
+            <button class="btn" id="restartBtn">CORRER DE NOVO</button>
         </div>
-
     </div>
 
-
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/libs/inflate.min.js"></script>
-
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/libs/fflate.min.js"></script>
-
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/FBXLoader.js"></script>
-
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/MTLLoader.js"></script>
-
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/OBJLoader.js"></script>
-
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
-
     <script type="module" src="js/main.js"></script>
-
 </body>
-
 </html>

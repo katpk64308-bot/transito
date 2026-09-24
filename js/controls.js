@@ -1,101 +1,231 @@
 import { keys, state } from './state.js';
 
-const modeOrder = [
-  'comfort',
-  'sport',
-  'eco'
-];
+const modeOrder = ['comfort', 'sport', 'eco'];
 
-export function setupControls(startRace) {
+export function setupControls(startRace, togglePause) {
+  const touchControls =
+    document.getElementById('touch-controls');
 
-  const touchControls = document.getElementById('touch-controls');
-
-  const enterFullscreen = () => {
+  function enterFullscreen() {
     const root = document.documentElement;
-    const request = root.requestFullscreen || root.webkitRequestFullscreen;
 
-    if (!request || document.fullscreenElement || document.webkitFullscreenElement) return;
+    const request =
+      root.requestFullscreen ||
+      root.webkitRequestFullscreen;
+
+    if (
+      !request ||
+      document.fullscreenElement ||
+      document.webkitFullscreenElement
+    ) {
+      return;
+    }
 
     try {
       const result = request.call(root);
+
       result?.catch?.(() => {});
+
       screen.orientation?.lock?.('landscape').catch?.(() => {});
     } catch {
       // O navegador pode não permitir tela cheia ou rotação neste dispositivo.
     }
-  };
+  }
 
-  document.getElementById('startBtn')?.addEventListener('click', enterFullscreen);
-
-  touchControls?.querySelectorAll('[data-control]').forEach(button => {
-    const control = button.dataset.control;
-
-    const release = () => {
-      keys[control] = false;
-      button.classList.remove('is-pressed');
-    };
-
-    button.addEventListener('pointerdown', event => {
-      event.preventDefault();
-      if (state.buildingEditorActive) return;
-
-      enterFullscreen();
-      button.setPointerCapture?.(event.pointerId);
-      keys[control] = true;
-      button.classList.add('is-pressed');
-
-      if (!state.raceStarted && !state.raceFinished) startRace();
-    });
-
-    ['pointerup', 'pointercancel', 'lostpointercapture'].forEach(type =>
-      button.addEventListener(type, release)
+  /*
+    Tela cheia ao iniciar a corrida
+  */
+  document
+    .getElementById('startBtn')
+    ?.addEventListener(
+      'click',
+      enterFullscreen
     );
-  });
 
-  addEventListener('keydown', event => {
+  /*
+    CONTROLES TOUCH
+  */
+  touchControls
+    ?.querySelectorAll('[data-control]')
+    .forEach(button => {
+      const control = button.dataset.control;
 
-    const key = event.key.toLowerCase();
+      const release = () => {
+        keys[control] = false;
+        button.classList.remove('is-pressed');
+      };
 
-    if (event.key === 'F3') return;
-    if (state.buildingEditorActive) return;
+      button.addEventListener(
+        'pointerdown',
+        event => {
+          event.preventDefault();
 
-    if (key === 'r' && !event.repeat) {
-      state.playerLightEnabled = !state.playerLightEnabled;
-    }
+          if (
+            state.buildingEditorActive ||
+            state.paused
+          ) {
+            return;
+          }
 
-    if (key === 'm') {
+          enterFullscreen();
 
-      const currentIndex =
-        modeOrder.indexOf(state.drivingMode || 'comfort');
+          button.setPointerCapture?.(
+            event.pointerId
+          );
 
-      const nextIndex =
-        (currentIndex + 1) % modeOrder.length;
+          keys[control] = true;
 
-      state.drivingMode =
-        modeOrder[nextIndex];
+          button.classList.add(
+            'is-pressed'
+          );
 
-      window.dispatchEvent(
-        new CustomEvent('drivingModeChanged', {
-          detail: state.drivingMode
-        })
+          if (
+            !state.raceStarted &&
+            !state.raceFinished
+          ) {
+            startRace();
+          }
+        }
       );
 
-      return;
+      [
+        'pointerup',
+        'pointercancel',
+        'lostpointercapture'
+      ].forEach(type => {
+        button.addEventListener(
+          type,
+          release
+        );
+      });
+    });
+
+  /*
+    CONTROLES DO TECLADO
+  */
+  addEventListener(
+    'keydown',
+    event => {
+      const key =
+        event.key.toLowerCase();
+
+      /*
+        F3 é tratado por outro sistema.
+      */
+      if (event.key === 'F3') {
+        return;
+      }
+
+      /*
+        No editor de prédios,
+        os controles da corrida ficam desativados.
+      */
+      if (state.buildingEditorActive) {
+        return;
+      }
+
+      /*
+        PAUSAR / CONTINUAR
+        P
+      */
+      if (
+        key === 'p' &&
+        !event.repeat
+      ) {
+        event.preventDefault();
+
+        togglePause?.();
+
+        /*
+          Evita que alguma tecla de movimento
+          fique presa ao abrir a pausa.
+        */
+        Object.keys(keys).forEach(
+          pressedKey => {
+            keys[pressedKey] = false;
+          }
+        );
+
+        return;
+      }
+
+      /*
+        Enquanto estiver pausado,
+        não aceita comandos de pilotagem.
+      */
+      if (state.paused) {
+        return;
+      }
+
+      /*
+        FAROL
+        R
+      */
+      if (
+        key === 'r' &&
+        !event.repeat
+      ) {
+        state.playerLightEnabled =
+          !state.playerLightEnabled;
+      }
+
+      /*
+        MUDAR MODO DE PILOTAGEM
+        M
+      */
+      if (key === 'm') {
+        const currentIndex =
+          modeOrder.indexOf(
+            state.drivingMode || 'comfort'
+          );
+
+        const nextIndex =
+          (currentIndex + 1) %
+          modeOrder.length;
+
+        state.drivingMode =
+          modeOrder[nextIndex];
+
+        window.dispatchEvent(
+          new CustomEvent(
+            'drivingModeChanged',
+            {
+              detail:
+                state.drivingMode
+            }
+          )
+        );
+
+        return;
+      }
+
+      /*
+        Movimento normal
+      */
+      keys[key] = true;
+
+      /*
+        A primeira tecla de movimento
+        inicia a corrida.
+      */
+      if (
+        !state.raceStarted &&
+        !state.raceFinished
+      ) {
+        startRace();
+      }
     }
+  );
 
-    keys[key] = true;
-
-    if (
-      !state.raceStarted &&
-      !state.raceFinished
-    ) {
-      startRace();
+  /*
+    SOLTAR TECLA
+  */
+  addEventListener(
+    'keyup',
+    event => {
+      keys[
+        event.key.toLowerCase()
+      ] = false;
     }
-  });
-
-  addEventListener('keyup', event => {
-
-    keys[event.key.toLowerCase()] = false;
-
-  });
+  );
 }

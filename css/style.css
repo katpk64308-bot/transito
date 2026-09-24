@@ -566,6 +566,25 @@ canvas#minimap {
   cursor: pointer;
 }
 
+#ambientVolume,
+#motorVolume {
+  width: 120px;
+  height: 18px;
+}
+
+.volume-value {
+  display: block;
+  margin: -6px 14px 14px;
+  color: #ffffff99;
+  font-size: 12px;
+  text-align: right;
+}
+
+.panel-note {
+  color: #ffffff99;
+  font-size: 12px !important;
+}
+
 .panel-note {
   color: #ffffff99;
   font-size: 12px !important;
