@@ -1,5 +1,6 @@
 import { ROAD_W_MAIN, ROAD_W_OUTER, ROAD_W_SHORT } from './config.js';
 
+
 const MODEL_CONFIG = {
   escola: {
     file: 'modelo/escola.fbx',

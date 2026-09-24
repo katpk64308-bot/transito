@@ -48,7 +48,14 @@ const ui = createUI(
   () => {
     updateCamera.releaseLock();
   },
-  () => buildingEditor.activate()
+  () => buildingEditor.activate(),
+  () => {
+    // TODO: aqui entra o carregamento/transição para a Fase 2,
+    // quando ela existir. Por enquanto só um placeholder — o botão
+    // só chega a chamar isto quando a Fase 1 foi concluída sem
+    // nenhuma infração (ver ui.js -> finishRace).
+    console.log('Fase 2 liberada — implementar aqui.');
+  }
 );
 
 window.addEventListener('shadowsChanged', event => {

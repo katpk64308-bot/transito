@@ -3,7 +3,8 @@ import { state } from './state.js';
 export function createUI(
   onRaceStart = null,
   onRaceFinish = null,
-  onBuildingEditorStart = null
+  onBuildingEditorStart = null,
+  onPhase2Start = null
 ) {
   const speedElement =
     document.getElementById('speedval');
@@ -34,6 +35,12 @@ export function createUI(
 
   const violationHistoryElement =
     document.getElementById('violationHistory');
+
+  const phase2Btn =
+    document.getElementById('phase2Btn');
+
+  const phase2Note =
+    document.getElementById('phase2Note');
 
   const trafficStatus =
     document.getElementById('traffic-status');
@@ -362,6 +369,34 @@ export function createUI(
       });
     }
 
+    /*
+       Libera o botão da Fase 2 somente quando a corrida
+       terminou sem nenhuma infração registrada (state.lawHistory
+       vazio). Enquanto não for o caso, o botão permanece com o
+       atributo "disabled" — o navegador já impede o clique
+       sozinho, então não precisa checar isso de novo no listener.
+    */
+
+    const cleanRun =
+      lawHistory.length === 0;
+
+    phase2Btn.disabled = !cleanRun;
+
+    phase2Btn.classList.toggle(
+      'locked',
+      !cleanRun
+    );
+
+    phase2Note.textContent =
+      cleanRun
+        ? 'Fase 2 liberada! Bom trabalho, nenhuma infração.'
+        : 'Você cometeu infrações nesta tentativa. Corra de novo sem infrações para liberar a Fase 2.';
+
+    phase2Note.classList.toggle(
+      'note-ok',
+      cleanRun
+    );
+
     finishOverlay.classList.remove(
       'hidden'
     );
@@ -448,6 +483,15 @@ export function createUI(
     .addEventListener(
       'click',
       () => location.reload()
+    );
+
+  document
+    .getElementById('phase2Btn')
+    .addEventListener(
+      'click',
+      () => {
+        onPhase2Start?.();
+      }
     );
 
   return {

@@ -826,3 +826,14 @@ canvas#minimap {
     height: 150px;
   }
 }
+
+.btn:disabled {
+  background: #4a4a4a;
+  color: #ffffff80;
+  cursor: not-allowed;
+  filter: none;
+}
+
+.panel-note.note-ok {
+  color: var(--ok);
+}
