@@ -1,7 +1,8 @@
-import { finalPts, finishPoint, outerPts, shortcutPts, startPts, trainPts } from './config.js';
+import { finalPts, finishPoint, phase2FinishPoint, outerPts, shortcutPts, startPts, trainPts } from './config.js';
 import { state } from './state.js';
 
-export function createMinimap(samples, getTrainState) {
+export function createMinimap(samples, getTrainState, phase = 1) {
+  const finishTarget = phase === 2 ? phase2FinishPoint : finishPoint;
   const canvas = document.getElementById('minimap');
   const context = canvas.getContext('2d');
   const dpr = Math.min(devicePixelRatio, 1.5);
@@ -47,7 +48,7 @@ export function createMinimap(samples, getTrainState) {
   let [staticX, staticY] = project(...startPts[0]);
   staticContext.fillStyle = '#ffcc33';
   staticContext.beginPath(); staticContext.arc(staticX, staticY, 4, 0, Math.PI * 2); staticContext.fill();
-  [staticX, staticY] = project(...finishPoint);
+  [staticX, staticY] = project(...finishTarget);
   staticContext.fillStyle = '#111'; staticContext.strokeStyle = '#fff'; staticContext.lineWidth = 1.5;
   staticContext.beginPath(); staticContext.arc(staticX, staticY, 4, 0, Math.PI * 2); staticContext.fill(); staticContext.stroke();
 

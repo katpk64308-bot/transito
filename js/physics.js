@@ -1,4 +1,4 @@
-import { finishPoint, physics } from './config.js';
+import { finishPoint, phase2FinishPoint, physics } from './config.js';
 import { isDown, state } from './state.js';
 
 function collidesWithModel(x, z, colliders) {
@@ -127,9 +127,13 @@ export function updatePhysics(
     state.speed = 0;
   }
 
+  state.bumpVelocity = Math.max(0, state.bumpVelocity || 0) - 18 * dt;
+  state.bumpHeight = Math.max(0, (state.bumpHeight || 0) + state.bumpVelocity * dt);
+  if (state.bumpHeight === 0) state.bumpVelocity = 0;
+
   bike.group.position.set(
     state.x,
-    0,
+    state.bumpHeight,
     state.z
   );
 
@@ -189,10 +193,11 @@ export function updatePhysics(
     state.contramao = false;
   }
 
+  const finishTarget = state.phase === 2 ? phase2FinishPoint : finishPoint;
   const distanceToFinish =
     Math.hypot(
-      state.x - finishPoint[0],
-      state.z - finishPoint[1]
+      state.x - finishTarget[0],
+      state.z - finishTarget[1]
     );
 
   if (

@@ -1,5 +1,5 @@
 import {
-  finalPts, finishPoint, outerPts, ROAD_W_MAIN, ROAD_W_OUTER,
+  finalPts, finishPoint, phase2FinishPoint, outerPts, ROAD_W_MAIN, ROAD_W_OUTER,
   ROAD_W_SHORT, shortcutPts, startPts, trainPts
 } from './config.js';
 
@@ -683,7 +683,8 @@ function createRailwaySignals(
 
 const ROAD_DETECTION_MARGIN = 8;
 
-export function createTrack(scene) {
+export function createTrack(scene, phase = 1) {
+  const finishTarget = phase === 2 ? phase2FinishPoint : finishPoint;
   const samples = {
     start: sampleCurve(
       startPts,
@@ -843,9 +844,9 @@ export function createTrack(scene) {
     -Math.PI / 2;
 
   finish.position.set(
-    finishPoint[0],
+    finishTarget[0],
     .16,
-    finishPoint[1]
+    finishTarget[1]
   );
 
   const previous =
@@ -880,9 +881,9 @@ export function createTrack(scene) {
     );
 
   flagPole.position.set(
-    finishPoint[0] + 6,
+    finishTarget[0] + 6,
     3.5,
-    finishPoint[1]
+    finishTarget[1]
   );
 
   flagPole.castShadow = true;
@@ -901,9 +902,9 @@ export function createTrack(scene) {
     );
 
   flag.position.set(
-    finishPoint[0] + 7.5,
+    finishTarget[0] + 7.5,
     6,
-    finishPoint[1]
+    finishTarget[1]
   );
 
   scene.add(flag);

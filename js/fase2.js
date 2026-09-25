@@ -13,7 +13,8 @@
 import {
   ROAD_W_MAIN,
   ROAD_W_OUTER,
-  ROAD_W_SHORT
+  ROAD_W_SHORT,
+  phase2SchoolPosition
 } from './config.js';
 
 import { state } from './state.js';
@@ -42,7 +43,7 @@ const at = (x, z, rotationY, rotationX = FLAT) => ({
 export const PHASE2_BUILDING_LAYOUT = {
 
   escola: {
-    position: { x: -190, y: 0, z: 320 }
+    position: phase2SchoolPosition
   },
 
   predio1: {
@@ -129,8 +130,8 @@ const COOLDOWN_SECONDS = 6;
 
 // Zona escolar (perto da chegada).
 const SCHOOL_ZONE = {
-  x: -190,
-  z: 320,
+  x: phase2SchoolPosition.x,
+  z: phase2SchoolPosition.z,
   radius: 55,
   limit: 15,
   graceSeconds: 1.2
@@ -765,8 +766,13 @@ export function createPhase2(scene, track) {
       if (distance > 10) bump.used = false;
       if (!playing || bump.used || distance > 4.5) return;
       bump.used = true;
-      if (Math.abs(state.speed) > 12) {
-        state.speed *= 0.72;
+      const impactSpeed = Math.abs(state.speed);
+      state.bumpVelocity = Math.max(
+        state.bumpVelocity || 0,
+        Math.min(6, 1.5 + impactSpeed * 0.2)
+      );
+      state.speed *= impactSpeed > 12 ? 0.72 : 0.92;
+      if (impactSpeed > 12) {
         state.score = Math.max(0, state.score - 35);
         hud.showToast('Lombada em alta velocidade: -35 pontos.');
       } else if (Math.abs(state.speed) > 0.5) {

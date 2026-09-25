@@ -61,6 +61,10 @@ export const state = {
 
   pedestriansYielded: 0,
   score: 0,
+  bumpHeight: 0,
+  bumpVelocity: 0,
+  bumpHeight: 0,
+  bumpVelocity: 0,
 
   buildingEditorActive: false
 };
@@ -142,6 +146,8 @@ export function resetRaceState(phase = 1) {
 
   state.pedestriansYielded = 0;
   state.score = 0;
+  state.bumpHeight = 0;
+  state.bumpVelocity = 0;
 
   Object.keys(keys).forEach(key => {
     keys[key] = false;

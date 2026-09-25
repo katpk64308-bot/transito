@@ -22,8 +22,8 @@ const {
   updateDayNight
 } = createScene();
 
-const track = createTrack(scene);
 const requestedPhase = new URLSearchParams(location.search).get('fase') === '2' ? 2 : 1;
+const track = createTrack(scene, requestedPhase);
 state.phase = requestedPhase;
 
 const models = createModels(
@@ -153,7 +153,8 @@ setupControls(
 const drawMinimap =
   createMinimap(
     track.samples,
-    updateTrafficTrain.getMinimapState
+    updateTrafficTrain.getMinimapState,
+    requestedPhase
   );
 
 

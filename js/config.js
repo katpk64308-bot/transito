@@ -99,6 +99,10 @@ export const trainPts = scalePoints([
 export const finishPoint =
   scalePoints([[35, 70]])[0];
 
+// Chegada da Fase 2, posicionada na rua diante da escola.
+export const phase2FinishPoint = [-160, 290];
+export const phase2SchoolPosition = { x: -205, y: 0, z: 335 };
+
 // Pista mais larga para facilitar as curvas
 // e deixar a condução mais confortável.
 
