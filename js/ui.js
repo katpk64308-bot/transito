@@ -211,6 +211,9 @@ export function createUI(
 
   function getLawAlert(type) {
     const alerts = {
+      pedestrian: ['PERIGO', 'VOCÊ NÃO DEU PREFERÊNCIA AO PEDESTRE', 'Colisão com pedestre na faixa.', 'collision'],
+      crosswalk: ['INFRAÇÃO', 'ATRAVESSOU COM PEDESTRE NA FAIXA', 'A faixa estava ocupada por pedestres.', 'wrong'],
+      schoolzone: ['INFRAÇÃO', 'EXCEDEU O LIMITE NA ZONA ESCOLAR', 'Reduza a velocidade perto da escola.', 'wrong'],
       car: [
         'COLISÃO',
         'VOCÊ BATEU NO CARRO',
@@ -509,6 +512,7 @@ export function createUI(
       performance.now();
 
     state.elapsed = 0;
+    state.score = state.phase === 2 ? 1000 : 0;
 
     if (introOverlay) {
       introOverlay.classList.add(
@@ -548,6 +552,20 @@ export function createUI(
 
   function finishRace() {
     state.raceFinished = true;
+    if (state.phase === 2) {
+      const title = finishOverlay?.querySelector('.card h1');
+      if (title) title.textContent = 'FASE 2 CONCLUÍDA';
+      if (phase2Btn) phase2Btn.hidden = true;
+      if (phase2Note) phase2Note.hidden = true;
+      let scoreResult = document.getElementById('phase2FinalScore');
+      if (!scoreResult && finishTimeElement) {
+        scoreResult = document.createElement('p');
+        scoreResult.id = 'phase2FinalScore';
+        scoreResult.className = 'clean-race';
+        finishTimeElement.insertAdjacentElement('afterend', scoreResult);
+      }
+      if (scoreResult) scoreResult.textContent = 'Pontuação final: ' + state.score + ' pontos';
+    }
 
     state.paused = false;
 

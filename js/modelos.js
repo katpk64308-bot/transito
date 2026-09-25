@@ -1,5 +1,6 @@
 import { ROAD_W_MAIN, ROAD_W_OUTER, ROAD_W_SHORT } from './config.js';
 import { registerNightGlow, registerNightLight } from './scene.js';
+import { PHASE2_BUILDING_LAYOUT } from './fase2.js';
 
 function addStreetlightEmitter(scene, streetlight, index, lightStride) {
   streetlight.updateMatrixWorld(true);
@@ -1545,7 +1546,8 @@ function loadModel(
 
 export function createModels(
   scene,
-  trackSamples = null
+  trackSamples = null,
+  phase = 1
 ) {
   const colliders = [];
   const buildingRecords = [];
@@ -1557,7 +1559,14 @@ export function createModels(
   Object.entries(
     MODEL_CONFIG
   ).forEach(
-    ([name, config]) => {
+    ([name, baseConfig]) => {
+      const phaseLayout =
+        phase === 2
+          ? PHASE2_BUILDING_LAYOUT[name]
+          : null;
+      const config = phaseLayout
+        ? { ...baseConfig, ...phaseLayout }
+        : baseConfig;
       if (
         config.collision?.enabled
       ) {

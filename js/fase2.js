@@ -11,7 +11,6 @@
 // ---------------------------------------------------------------------------
 
 import {
-  finishPoint,
   ROAD_W_MAIN,
   ROAD_W_OUTER,
   ROAD_W_SHORT
@@ -41,6 +40,10 @@ const at = (x, z, rotationY, rotationX = FLAT) => ({
 });
 
 export const PHASE2_BUILDING_LAYOUT = {
+
+  escola: {
+    position: { x: -190, y: 0, z: 320 }
+  },
 
   predio1: {
     manualPlacement: false,
@@ -126,12 +129,18 @@ const COOLDOWN_SECONDS = 6;
 
 // Zona escolar (perto da chegada).
 const SCHOOL_ZONE = {
-  x: finishPoint[0],
-  z: finishPoint[1],
+  x: -190,
+  z: 320,
   radius: 55,
   limit: 15,
   graceSeconds: 1.2
 };
+
+const SPEED_BUMP_SPECS = [
+  { road: 'start', fraction: 0.78 },
+  { road: 'shortcut', fraction: 0.58 },
+  { road: 'outer', fraction: 0.78 }
+];
 
 const PEDESTRIAN_COLORS = [
   0xd94f4f, 0x3f8fd9, 0xe0b73a, 0x58b368, 0xa564c9, 0xe27d3f
@@ -180,13 +189,13 @@ function injectStyles() {
     }
 
     .p2-hint {
-      top: 56px;
+      top: 96px;
       background: #8e1818e8;
       border: 2px solid #ff4d4d;
     }
 
     .p2-toast {
-      top: 104px;
+      top: 146px;
       background: #146b3ae8;
       border: 2px solid #5be37a;
     }
@@ -195,6 +204,14 @@ function injectStyles() {
     .p2-toast.on {
       opacity: 1;
     }
+
+    .p2-score {
+      position: fixed; top: 54px; left: 50%; transform: translateX(-50%); z-index: 6;
+      padding: 9px 16px; border: 1px solid #5be37a88; border-radius: 10px;
+      background: #101114e8; color: #fff; font: 800 12px 'Segoe UI', Arial, sans-serif;
+      letter-spacing: 1px; pointer-events: none;
+    }
+    .p2-score b { color: #5be37a; font-size: 20px; margin-left: 6px; }
 
     .p2-sign {
       position: fixed;
@@ -268,7 +285,7 @@ function applyPhase2Texts() {
       'A cidade está mais movimentada e os prédios mudaram de lugar. ' +
       'Agora existem faixas de pedestre: pare e espere os pedestres ' +
       'atravessarem. Perto da escola vale o limite de ' +
-      `${SCHOOL_ZONE.limit} km/h.`;
+      `${SCHOOL_ZONE.limit} km/h. Lombadas: passe devagar. Infracoes tiram pontos; dar preferencia ao pedestre soma pontos.`;
   }
 }
 
@@ -291,6 +308,7 @@ function createHud() {
     `<b>${SCHOOL_ZONE.limit}</b><span>ZONA ESCOLAR</span>`
   );
 
+  const score = make('p2-score', 'PONTOS <b>1000</b>');
   let toastTimer = null;
 
   function showToast(text) {
@@ -304,7 +322,7 @@ function createHud() {
     }, 3500);
   }
 
-  return { banner, hint, sign, showToast };
+  return { banner, hint, sign, score, showToast };
 }
 
 
@@ -563,6 +581,35 @@ function buildCrosswalk(
 }
 
 
+function buildSpeedBumps(scene, track) {
+  const bumps = [];
+  SPEED_BUMP_SPECS.forEach(spec => {
+    const samples = track.samples[spec.road];
+    if (!samples || samples.length < 4) return;
+    const index = Math.max(1, Math.min(samples.length - 2, Math.round(spec.fraction * (samples.length - 1))));
+    const point = samples[index];
+    const prev = samples[index - 1];
+    const next = samples[index + 1];
+    const heading = Math.atan2(next.x - prev.x, next.z - prev.z);
+    const width = ROAD_WIDTHS[spec.road];
+    const group = new THREE.Group();
+    group.position.set(point.x, 0.08, point.z);
+    group.rotation.y = heading;
+    const black = new THREE.MeshLambertMaterial({ color: 0x171717 });
+    const yellow = new THREE.MeshLambertMaterial({ color: 0xffd22e });
+    const count = Math.ceil(width / 3);
+    for (let i = 0; i < count; i += 1) {
+      const mesh = new THREE.Mesh(new THREE.BoxGeometry(width / count + 0.04, 0.34, 3.2), i % 2 ? black : yellow);
+      mesh.position.set(-width / 2 + width * (i + 0.5) / count, 0.17, 0);
+      mesh.receiveShadow = true;
+      group.add(mesh);
+    }
+    scene.add(group);
+    bumps.push({ x: point.x, z: point.z, used: false, group });
+  });
+  return bumps;
+}
+
 /* =========================================================
    6. CRIAR A FASE 2
 ========================================================= */
@@ -594,6 +641,7 @@ export function createPhase2(scene, track) {
     crosswalks.map(crosswalk => crosswalk.signal);
 
   state.pedestriansYielded = 0;
+  const speedBumps = buildSpeedBumps(scene, track);
 
   let schoolOverTime = 0;
 
@@ -699,6 +747,7 @@ export function createPhase2(scene, track) {
           ) {
             crosswalk.yielded = true;
             state.pedestriansYielded += 1;
+            state.score += 100;
             hud.showToast('✅ Muito bem! Você deu preferência ao pedestre.');
           }
         }
@@ -710,6 +759,22 @@ export function createPhase2(scene, track) {
     });
 
     hud.hint.classList.toggle('on', pedestrianNearby && playing);
+
+    speedBumps.forEach(bump => {
+      const distance = Math.hypot(state.x - bump.x, state.z - bump.z);
+      if (distance > 10) bump.used = false;
+      if (!playing || bump.used || distance > 4.5) return;
+      bump.used = true;
+      if (Math.abs(state.speed) > 12) {
+        state.speed *= 0.72;
+        state.score = Math.max(0, state.score - 35);
+        hud.showToast('Lombada em alta velocidade: -35 pontos.');
+      } else if (Math.abs(state.speed) > 0.5) {
+        state.score += 25;
+        hud.showToast('Boa! Passou devagar pela lombada: +25 pontos.');
+      }
+    });
+    hud.score.innerHTML = 'PONTOS <b>' + state.score + '</b>';
 
     // Zona escolar.
     const inSchoolZone =
@@ -774,6 +839,7 @@ export function createPhase2(scene, track) {
     update,
     getHitboxes,
     getViolation,
-    getCarStopSignals: () => stopSignals
+    getCarStopSignals: () => stopSignals,
+    getScore: () => state.score
   };
 }

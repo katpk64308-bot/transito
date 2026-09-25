@@ -60,6 +60,7 @@ export const state = {
   maxSpeed: physics.MODES.eco,
 
   pedestriansYielded: 0,
+  score: 0,
 
   buildingEditorActive: false
 };
@@ -140,6 +141,7 @@ export function resetRaceState(phase = 1) {
   state.elapsed = 0;
 
   state.pedestriansYielded = 0;
+  state.score = 0;
 
   Object.keys(keys).forEach(key => {
     keys[key] = false;

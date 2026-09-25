@@ -10,6 +10,7 @@ import { createUI } from './ui.js';
 import { createCoordinates } from './coordinates.js';
 import { createModels } from './modelos.js';
 import { createBuildingEditor } from './building-editor.js';
+import { createPhase2 } from './fase2.js';
 
 import { createTrafficCar } from './NPCs/Cars.js';
 import { createTrafficTrain } from './NPCs/Train.js';
@@ -22,11 +23,15 @@ const {
 } = createScene();
 
 const track = createTrack(scene);
+const requestedPhase = new URLSearchParams(location.search).get('fase') === '2' ? 2 : 1;
+state.phase = requestedPhase;
 
 const models = createModels(
   scene,
-  track.samples
+  track.samples,
+  requestedPhase
 );
+const phase2 = requestedPhase === 2 ? createPhase2(scene, track) : null;
 
 const updateTrafficTrain =
   createTrafficTrain(
@@ -39,7 +44,10 @@ const updateTrafficCar =
     scene,
     track,
     updateTrafficTrain.getHitboxes,
-    track.getRailwaySignalStates
+    () => [
+      ...track.getRailwaySignalStates(),
+      ...(phase2?.getCarStopSignals() || [])
+    ]
   );
 
 const bike = buildBike();
@@ -77,9 +85,7 @@ const ui = createUI(
   },
 
   () => {
-    console.log(
-      'Fase 2 liberada — implementar aqui.'
-    );
+    location.href = location.pathname + '?fase=2';
   }
 );
 
@@ -286,7 +292,8 @@ updateDrivingModeDisplay();
 function checkTrafficCollisions() {
   const hitboxes = [
     ...updateTrafficCar.getHitboxes(),
-    ...updateTrafficTrain.getHitboxes()
+    ...updateTrafficTrain.getHitboxes(),
+    ...(phase2?.getHitboxes() || [])
   ];
 
   const bikeRadius = 1.4;
@@ -681,6 +688,7 @@ function animate() {
   ------------------------------------------------------- */
 
   updateTrafficCar(dt);
+  phase2?.update(dt);
 
 
   /* -------------------------------------------------------
@@ -711,7 +719,7 @@ function animate() {
         : (
           state.contramao
             ? 'wrong'
-            : null
+            : (phase2?.getViolation() || null)
         )
     );
 
@@ -721,6 +729,7 @@ function animate() {
     currentViolation !==
       previousViolation
   ) {
+    if (state.phase === 2) state.score = Math.max(0, state.score - 100);
     if (
       !state.lawHistory.includes(
         currentViolation
