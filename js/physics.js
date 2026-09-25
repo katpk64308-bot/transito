@@ -193,7 +193,10 @@ export function updatePhysics(
     state.contramao = false;
   }
 
-  const finishTarget = state.phase === 2 ? phase2FinishPoint : finishPoint;
+  const configuredFinish = state.phase === 2 ? phase2FinishPoint : finishPoint;
+  const finishTarget = state.phase === 2 && track.finishPosition
+    ? [track.finishPosition.x, track.finishPosition.z]
+    : configuredFinish;
   const distanceToFinish =
     Math.hypot(
       state.x - finishTarget[0],

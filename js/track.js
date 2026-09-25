@@ -832,7 +832,7 @@ export function createTrack(scene, phase = 1) {
   const finish =
     new THREE.Mesh(
       new THREE.PlaneGeometry(
-        ROAD_W_MAIN,
+        phase === 2 ? ROAD_W_OUTER : ROAD_W_MAIN,
         4
       ),
       new THREE.MeshBasicMaterial({
@@ -843,27 +843,44 @@ export function createTrack(scene, phase = 1) {
   finish.rotation.x =
     -Math.PI / 2;
 
-  finish.position.set(
-    finishTarget[0],
-    .16,
-    finishTarget[1]
-  );
-
-  const previous =
-    finalPts[
-      finalPts.length - 2
-    ];
-
-  const last =
-    finalPts[
-      finalPts.length - 1
-    ];
-
-  finish.rotation.z =
-    Math.atan2(
-      last[0] - previous[0],
-      last[1] - previous[1]
+  const finishRoad = phase === 2 ? samples.outer : samples.final;
+  let finishX = finishTarget[0];
+  let finishZ = finishTarget[1];
+  let finishTangentX = 0;
+  let finishTangentZ = 1;
+  let nearestFinishDistance = Infinity;
+  for (let i = 0; i < finishRoad.length - 1; i += 1) {
+    const a = finishRoad[i];
+    const b = finishRoad[i + 1];
+    const segmentX = b.x - a.x;
+    const segmentZ = b.z - a.z;
+    const segmentLengthSquared = segmentX * segmentX + segmentZ * segmentZ || 1;
+    const amount = Math.max(0, Math.min(1,
+      ((finishTarget[0] - a.x) * segmentX +
+        (finishTarget[1] - a.z) * segmentZ) / segmentLengthSquared
+    ));
+    const projectedX = a.x + segmentX * amount;
+    const projectedZ = a.z + segmentZ * amount;
+    const distance = Math.hypot(
+      projectedX - finishTarget[0],
+      projectedZ - finishTarget[1]
     );
+    if (distance < nearestFinishDistance) {
+      nearestFinishDistance = distance;
+      finishTangentX = segmentX;
+      finishTangentZ = segmentZ;
+      if (phase === 2) {
+        finishX = projectedX;
+        finishZ = projectedZ;
+      }
+    }
+  }
+
+  const finishHeading = Math.atan2(finishTangentX, finishTangentZ);
+  finish.position.set(finishX, .16, finishZ);
+  // PlaneGeometry is built in XY. Rotate it inside its own plane first,
+  // then lay it flat; Z rotation aligns its width across the road.
+  finish.rotation.set(-Math.PI / 2, 0, finishHeading);
 
   scene.add(finish);
 
@@ -880,10 +897,19 @@ export function createTrack(scene, phase = 1) {
       })
     );
 
+  const finishTangentLength = Math.hypot(finishTangentX, finishTangentZ) || 1;
+  const finishNormalX = -finishTangentZ / finishTangentLength;
+  const finishNormalZ = finishTangentX / finishTangentLength;
+  const finishSide = phase === 2 ? -1 : 1;
+
   flagPole.position.set(
-    finishTarget[0] + 6,
+    phase === 2
+      ? finishX + finishNormalX * finishSide * (ROAD_W_OUTER / 2 + 1)
+      : finishTarget[0] + 6,
     3.5,
-    finishTarget[1]
+    phase === 2
+      ? finishZ + finishNormalZ * finishSide * (ROAD_W_OUTER / 2 + 1)
+      : finishTarget[1]
   );
 
   flagPole.castShadow = true;
@@ -902,15 +928,21 @@ export function createTrack(scene, phase = 1) {
     );
 
   flag.position.set(
-    finishTarget[0] + 7.5,
+    phase === 2
+      ? finishX + finishNormalX * finishSide * (ROAD_W_OUTER / 2 + 1.5)
+      : finishTarget[0] + 7.5,
     6,
-    finishTarget[1]
+    phase === 2
+      ? finishZ + finishNormalZ * finishSide * (ROAD_W_OUTER / 2 + 1.5)
+      : finishTarget[1]
   );
+  if (phase === 2) flag.rotation.y = finishHeading;
 
   scene.add(flag);
 
   return {
     samples,
+    finishPosition: { x: finishX, z: finishZ },
 
     updateRailwaySignals:
       railwaySignals.update,

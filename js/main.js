@@ -730,7 +730,7 @@ function animate() {
     currentViolation !==
       previousViolation
   ) {
-    if (state.phase === 2) state.score = Math.max(0, state.score - 100);
+    if (state.phase === 2) state.score -= 100;
     if (
       !state.lawHistory.includes(
         currentViolation

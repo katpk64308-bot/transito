@@ -1,4 +1,4 @@
-import { finalPts, finishPoint, phase2FinishPoint, outerPts, shortcutPts, startPts, trainPts } from './config.js';
+import { finalPts, finishPoint, phase2FinishPoint, outerPts, shortcutPts, startPts, trainPts, ROAD_W_MAIN, ROAD_W_OUTER } from './config.js';
 import { state } from './state.js';
 
 export function createMinimap(samples, getTrainState, phase = 1) {
@@ -48,7 +48,63 @@ export function createMinimap(samples, getTrainState, phase = 1) {
   let [staticX, staticY] = project(...startPts[0]);
   staticContext.fillStyle = '#ffcc33';
   staticContext.beginPath(); staticContext.arc(staticX, staticY, 4, 0, Math.PI * 2); staticContext.fill();
-  [staticX, staticY] = project(...finishTarget);
+  const finishRoad = phase === 2 ? samples.outer : samples.final;
+  let finishX = finishTarget[0];
+  let finishZ = finishTarget[1];
+  let finishTangentX = 0;
+  let finishTangentZ = 1;
+  let finishRoadDistance = Infinity;
+  for (let i = 0; i < finishRoad.length - 1; i += 1) {
+    const a = finishRoad[i];
+    const b = finishRoad[i + 1];
+    const segmentX = b.x - a.x;
+    const segmentZ = b.z - a.z;
+    const segmentLengthSquared = segmentX * segmentX + segmentZ * segmentZ || 1;
+    const amount = Math.max(0, Math.min(1,
+      ((finishTarget[0] - a.x) * segmentX +
+        (finishTarget[1] - a.z) * segmentZ) / segmentLengthSquared
+    ));
+    const projectedX = a.x + segmentX * amount;
+    const projectedZ = a.z + segmentZ * amount;
+    const distance = Math.hypot(projectedX - finishTarget[0], projectedZ - finishTarget[1]);
+    if (distance < finishRoadDistance) {
+      finishRoadDistance = distance;
+      finishTangentX = segmentX;
+      finishTangentZ = segmentZ;
+      if (phase === 2) {
+        finishX = projectedX;
+        finishZ = projectedZ;
+      }
+    }
+  }
+
+  const tangentLength = Math.hypot(finishTangentX, finishTangentZ) || 1;
+  const halfFinishWidth = (phase === 2 ? ROAD_W_OUTER : ROAD_W_MAIN) / 2;
+  const finishAcrossX = -finishTangentZ / tangentLength * halfFinishWidth;
+  const finishAcrossZ = finishTangentX / tangentLength * halfFinishWidth;
+  const [finishLeftX, finishLeftY] = project(
+    finishX - finishAcrossX,
+    finishZ - finishAcrossZ
+  );
+  const [finishRightX, finishRightY] = project(
+    finishX + finishAcrossX,
+    finishZ + finishAcrossZ
+  );
+  staticContext.lineCap = 'butt';
+  staticContext.strokeStyle = '#fff';
+  staticContext.lineWidth = 4;
+  staticContext.beginPath();
+  staticContext.moveTo(finishLeftX, finishLeftY);
+  staticContext.lineTo(finishRightX, finishRightY);
+  staticContext.stroke();
+  staticContext.strokeStyle = '#111';
+  staticContext.lineWidth = 2;
+  staticContext.beginPath();
+  staticContext.moveTo(finishLeftX, finishLeftY);
+  staticContext.lineTo(finishRightX, finishRightY);
+  staticContext.stroke();
+
+  [staticX, staticY] = project(finishX, finishZ);
   staticContext.fillStyle = '#111'; staticContext.strokeStyle = '#fff'; staticContext.lineWidth = 1.5;
   staticContext.beginPath(); staticContext.arc(staticX, staticY, 4, 0, Math.PI * 2); staticContext.fill(); staticContext.stroke();
 

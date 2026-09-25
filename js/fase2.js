@@ -26,13 +26,6 @@ const THREE = window.THREE;
    1. LAYOUT DOS PRÉDIOS NA FASE 2
 ========================================================= */
 
-/*
-   Posições aproximadas. Como manualPlacement é false, o modelos.js
-   empurra cada prédio para fora das ruas e da ferrovia e evita que
-   um prédio fique em cima do outro. Para ajustar no olho, use o botão
-   "EDITAR PRÉDIOS" com ?fase=2 na URL e copie as instâncias geradas.
-*/
-
 const FLAT = -Math.PI / 2;
 
 const at = (x, z, rotationY, rotationX = FLAT) => ({
@@ -47,54 +40,63 @@ export const PHASE2_BUILDING_LAYOUT = {
   },
 
   predio1: {
-    manualPlacement: false,
+    file: 'modelo/cidade/predio1/Flatiron_Building_v1_L1.123cb356d0cd-9f00-4bc4-be97-260db4c03d17/13943_Flatiron_Building_v1_l1.obj',
+    mtl: 'modelo/cidade/predio1/Flatiron_Building_v1_L1.123cb356d0cd-9f00-4bc4-be97-260db4c03d17/13943_Flatiron_Building_v1_l1.mtl',
     position: { x: -60, y: 0, z: -50 },
+    scale: { x: 0.007, y: 0.007, z: 0.007 },
+    rotation: { x: FLAT, y: 0, z: 0 },
     instances: [
-      at(-60, -50, 0.6),
-      at(170, -45, -2.2),
-      at(-300, 120, 1.1),
-      at(95, 290, 2.6),
-      at(300, 210, -0.9),
-      at(-20, 420, 3.5)
-    ]
+      at(-60, -50, -0.175), at(170, -45, -1.92),
+      at(-228, 120, 1.1), at(161, 290, 2.094),
+      at(304, 296, -1.396), at(-20, 429, 4.276)
+    ],
+    castShadow: true, manualPlacement: true,
+    collision: { enabled: false }, alignGround: true
   },
 
   predio2: {
-    manualPlacement: false,
+    file: 'modelo/cidade/predio2/chrysler_building_v1_L1.123c61b463a0-1adf-4cf0-9acf-5e8e8f908a80/13942_Chrysler_Building_V1_l1.obj',
+    mtl: 'modelo/cidade/predio2/chrysler_building_v1_L1.123c61b463a0-1adf-4cf0-9acf-5e8e8f908a80/13942_Chrysler_Building_V1_l1.mtl',
     position: { x: 120, y: 0, z: 80 },
+    scale: { x: 0.002, y: 0.002, z: 0.002 },
+    rotation: { x: FLAT, y: 0, z: 0 },
     instances: [
-      at(120, 80, -0.4),
-      at(-300, -20, 1.9),
-      at(-260, 330, -2.6),
-      at(230, 440, 0.3),
-      at(450, 160, 2.2),
-      at(60, 215, -1.3)
-    ]
+      at(120, 80, 0), at(-300, -20, 0.873),
+      at(-211, 289, -3.142), at(230, 440, -0.262),
+      at(417, 160, 2.199), at(60, 215, -1.3)
+    ],
+    castShadow: true, manualPlacement: true,
+    collision: { enabled: false }, alignGround: true
   },
 
   predio3: {
-    manualPlacement: false,
-    position: { x: -180, y: 0, z: -60 },
+    file: 'modelo/cidade/predio3/Massachussetshall.obj',
+    mtl: 'modelo/cidade/predio3/Massachussetshall.mtl',
+    position: { x: -193, y: 0, z: 251 },
+    scale: { x: 0.22, y: 0.22, z: 0.22 },
+    rotation: { x: 0, y: 0, z: 0 },
     instances: [
-      at(-180, -60, 1.6, 0),
-      at(30, -90, 0, 0),
-      at(330, -30, -1.6, 0),
-      at(-60, 330, 3.1, 0),
-      at(370, 420, 0.8, 0)
-    ]
+      at(-193, 251, 0, 0), at(-150, 360, 0, 0),
+      at(80, 430, 0, 0), at(300, 260, 0, 0),
+      at(430, 70, 0, 0)
+    ],
+    castShadow: true, manualPlacement: true,
+    collision: { enabled: false }, alignGround: true
   },
 
   predio4: {
-    manualPlacement: false,
-    position: { x: 200, y: 0, z: 90 },
+    file: 'modelo/cidade/predio4/Hospital_Building_V2_L3.123c3359fae7-7089-4dd3-993b-ce8739108426/10075_Hospital Building_V1_L3.obj',
+    mtl: 'modelo/cidade/predio4/Hospital_Building_V2_L3.123c3359fae7-7089-4dd3-993b-ce8739108426/10075_Hospital Building_V1_L3.mtl',
+    position: { x: 186, y: 0, z: 76 },
+    scale: { x: 0.009, y: 0.009, z: 0.009 },
+    rotation: { x: FLAT, y: 0, z: 0 },
     instances: [
-      at(200, 90, 1.2),
-      at(-30, 120, -2.0),
-      at(-350, 200, 0.4),
-      at(120, 400, 2.9),
-      at(500, 300, -1.1),
-      at(300, -70, 3.4)
-    ]
+      at(186, 76, 0.785), at(-30, 155, -0.349),
+      at(-288, 57, 1.92), at(120, 400, 1.658),
+      at(492, 301, -Math.PI / 2), at(293, -25, 6.021)
+    ],
+    castShadow: true, manualPlacement: true,
+    collision: { enabled: false }, alignGround: true
   }
 };
 
@@ -132,9 +134,9 @@ const COOLDOWN_SECONDS = 6;
 const SCHOOL_ZONE = {
   x: phase2SchoolPosition.x,
   z: phase2SchoolPosition.z,
-  radius: 55,
+  radius: 125,
   limit: 15,
-  graceSeconds: 1.2
+  graceSeconds: 3
 };
 
 const SPEED_BUMP_SPECS = [
@@ -286,7 +288,7 @@ function applyPhase2Texts() {
       'A cidade está mais movimentada e os prédios mudaram de lugar. ' +
       'Agora existem faixas de pedestre: pare e espere os pedestres ' +
       'atravessarem. Perto da escola vale o limite de ' +
-      `${SCHOOL_ZONE.limit} km/h. Lombadas: passe devagar. Infracoes tiram pontos; dar preferencia ao pedestre soma pontos.`;
+      `${SCHOOL_ZONE.limit} km/h. Lombadas: máximo 15 km/h. Exceder o limite escolar por 3 segundos gera infração. Infrações tiram pontos; dar preferência ao pedestre soma pontos.`;
   }
 }
 
@@ -496,14 +498,14 @@ function buildCrosswalk(
   [-1, 1].forEach(side => {
     const sign = new THREE.Group();
 
-    // Uma placa para cada sentido do trânsito.
+    // Vira cada placa para o sentido contrário, de frente para quem se aproxima.
     sign.position.set(
-      side * (halfWidth + 2.4),
+      side * (halfWidth + 6.5),
       0,
-      side > 0 ? -5.5 : 5.5
+      side > 0 ? 8 : -8
     );
 
-    sign.rotation.y = side > 0 ? Math.PI : 0;
+    sign.rotation.y = side > 0 ? 0 : Math.PI;
 
     const pole = new THREE.Mesh(
       new THREE.CylinderGeometry(0.08, 0.08, 3.2, 8),
@@ -606,7 +608,15 @@ function buildSpeedBumps(scene, track) {
       group.add(mesh);
     }
     scene.add(group);
-    bumps.push({ x: point.x, z: point.z, used: false, group });
+    bumps.push({
+      x: point.x,
+      z: point.z,
+      tx: Math.sin(heading),
+      tz: Math.cos(heading),
+      width,
+      used: false,
+      group
+    });
   });
   return bumps;
 }
@@ -645,6 +655,7 @@ export function createPhase2(scene, track) {
   const speedBumps = buildSpeedBumps(scene, track);
 
   let schoolOverTime = 0;
+  let schoolPenaltyTime = 0;
 
   // O jogador está em cima da faixa?
   function playerOnCrosswalk(crosswalk) {
@@ -764,16 +775,23 @@ export function createPhase2(scene, track) {
     speedBumps.forEach(bump => {
       const distance = Math.hypot(state.x - bump.x, state.z - bump.z);
       if (distance > 10) bump.used = false;
-      if (!playing || bump.used || distance > 4.5) return;
+      const dx = state.x - bump.x;
+      const dz = state.z - bump.z;
+      const along = dx * bump.tx + dz * bump.tz;
+      const across = dx * bump.tz - dz * bump.tx;
+      const overlapsBump =
+        Math.abs(along) <= 4.5 &&
+        Math.abs(across) <= bump.width / 2 + 2.5;
+      if (!playing || bump.used || !overlapsBump) return;
       bump.used = true;
       const impactSpeed = Math.abs(state.speed);
       state.bumpVelocity = Math.max(
         state.bumpVelocity || 0,
         Math.min(6, 1.5 + impactSpeed * 0.2)
       );
-      state.speed *= impactSpeed > 12 ? 0.72 : 0.92;
-      if (impactSpeed > 12) {
-        state.score = Math.max(0, state.score - 35);
+      state.speed *= impactSpeed > 15 ? 0.72 : 0.92;
+      if (impactSpeed > 15) {
+        state.score -= 35;
         hud.showToast('Lombada em alta velocidade: -35 pontos.');
       } else if (Math.abs(state.speed) > 0.5) {
         state.score += 25;
@@ -799,6 +817,22 @@ export function createPhase2(scene, track) {
       inSchoolZone && overLimit && playing
         ? schoolOverTime + dt
         : 0;
+
+    if (
+      inSchoolZone &&
+      overLimit &&
+      playing &&
+      schoolOverTime > SCHOOL_ZONE.graceSeconds
+    ) {
+      schoolPenaltyTime += dt;
+      if (schoolPenaltyTime >= 3) {
+        state.score -= 25;
+        schoolPenaltyTime = 0;
+        hud.showToast('Excesso contínuo na zona escolar: -25 pontos.');
+      }
+    } else {
+      schoolPenaltyTime = 0;
+    }
   }
 
   // Pedestres que estão atravessando podem ser atropelados.
