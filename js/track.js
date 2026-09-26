@@ -681,7 +681,7 @@ function createRailwaySignals(
   };
 }
 
-const ROAD_DETECTION_MARGIN = 8;
+const ROAD_DETECTION_MARGIN = 1.6;
 
 export function createTrack(scene, phase = 1) {
   const finishTarget = phase === 2 ? phase2FinishPoint : finishPoint;
@@ -804,7 +804,7 @@ export function createTrack(scene, phase = 1) {
     [
       samples.shortcut,
       ROAD_W_SHORT,
-      true
+      false
     ],
 
     [

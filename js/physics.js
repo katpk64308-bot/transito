@@ -1,4 +1,9 @@
-import { finishPoint, phase2FinishPoint, physics } from './config.js';
+import {
+  finishPoint,
+  forkPoint,
+  phase2FinishPoint,
+  physics
+} from './config.js';
 import { isDown, state } from './state.js';
 
 function collidesWithModel(x, z, colliders) {
@@ -19,6 +24,58 @@ function collidesWithModel(x, z, colliders) {
     return Math.abs(localX) <= collider.halfX + bikeRadius &&
       Math.abs(localZ) <= collider.halfZ + bikeRadius;
   });
+}
+
+export function getContramaoState(
+  { x, z, speed, heading },
+  roadPosition,
+  steer = 0
+) {
+  if (
+    Math.hypot(
+      x - forkPoint[0],
+      z - forkPoint[1]
+    ) < 10
+  ) {
+    return false;
+  }
+
+  if (
+    !roadPosition ||
+    roadPosition.distance >
+      roadPosition.halfWidth +
+      (roadPosition.roadMargin || 0) ||
+    speed <= .5
+  ) {
+    return false;
+  }
+
+  if (Math.abs(steer) > .15) {
+    return false;
+  }
+
+  const sideThreshold =
+    Math.max(
+      .8,
+      (roadPosition.halfWidth || 0) * .06
+    );
+
+  if (Math.abs(roadPosition.offset) <= sideThreshold) {
+    return false;
+  }
+
+  const movementAlongRoad =
+    Math.sin(heading) * roadPosition.tangentX +
+    Math.cos(heading) * roadPosition.tangentZ;
+
+  const movingWithRoute = movementAlongRoad > 0;
+
+  if (roadPosition.oneWay) {
+    return !movingWithRoute;
+  }
+
+  const onLeftSide = roadPosition.offset > 0;
+  return onLeftSide !== movingWithRoute;
 }
 
 export function updatePhysics(
@@ -161,37 +218,12 @@ export function updatePhysics(
   bike.wheelBack.rotation.x -=
     wheelSpin;
 
-  if (
-    roadPosition &&
-    roadPosition.distance <= roadLimit &&
-    Math.abs(state.speed) > .5
-  ) {
-    if (Math.abs(steer) > .15) {
-      state.contramao = false;
-    } else {
-      const movingWithRoute =
-        state.speed *
-        (
-          Math.sin(state.heading) *
-            roadPosition.tangentX +
-          Math.cos(state.heading) *
-            roadPosition.tangentZ
-        ) > 0;
-
-      if (roadPosition.oneWay) {
-        state.contramao =
-          !movingWithRoute;
-      } else {
-        const onLeftSide =
-          roadPosition.offset > 1.5;
-
-        state.contramao =
-          onLeftSide !== movingWithRoute;
-      }
-    }
-  } else {
-    state.contramao = false;
-  }
+  state.contramao =
+    getContramaoState(
+      state,
+      roadPosition,
+      steer
+    );
 
   const configuredFinish = state.phase === 2 ? phase2FinishPoint : finishPoint;
   const finishTarget = state.phase === 2 && track.finishPosition
