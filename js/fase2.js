@@ -203,6 +203,11 @@ function injectStyles() {
       border: 2px solid #5be37a;
     }
 
+    .p2-toast.error {
+      background: #8e1818e8;
+      border: 2px solid #ff4d4d;
+    }
+
     .p2-hint.on,
     .p2-toast.on {
       opacity: 1;
@@ -314,8 +319,12 @@ function createHud() {
   const score = make('p2-score', 'PONTOS <b>1000</b>');
   let toastTimer = null;
 
-  function showToast(text) {
+  function showToast(text, tone = 'success') {
     toast.textContent = text;
+    toast.classList.remove('error');
+    if (tone === 'error') {
+      toast.classList.add('error');
+    }
     toast.classList.add('on');
 
     window.clearTimeout(toastTimer);
@@ -792,7 +801,7 @@ export function createPhase2(scene, track) {
       state.speed *= impactSpeed > 15 ? 0.72 : 0.92;
       if (impactSpeed > 15) {
         state.score -= 35;
-        hud.showToast('Lombada em alta velocidade: -35 pontos.');
+        hud.showToast('Lombada em alta velocidade: -35 pontos.', 'error');
       } else if (Math.abs(state.speed) > 0.5) {
         state.score += 25;
         hud.showToast('Boa! Passou devagar pela lombada: +25 pontos.');
